@@ -53,7 +53,7 @@ Job Copilot is an AI-assisted career platform currently in **active development*
    ```bash
    ./start.sh
    ```
-   This script runs pending database migrations and launches the FastAPI server on `http://127.0.0.1:8000`.
+   This creates the schema for a brand-new empty database, then launches the FastAPI server on `http://127.0.0.1:8000`. It never auto-migrates an existing database; if the schema is outdated it refuses to start — back up `data/copilot.db` and run `cd backend && alembic upgrade head`.
 
 ---
 
@@ -124,7 +124,7 @@ Tests in `backend/tests/conftest.py` run in complete isolation:
 ### Linting & Formatting
 Python code is analyzed using **Ruff**:
 ```bash
-pip install ruff
+# ruff is pinned (with hashes) in requirements-dev.txt; no separate install needed
 ruff check backend/
 ```
 

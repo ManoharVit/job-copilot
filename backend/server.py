@@ -20,7 +20,7 @@ from app_tracker.router import router as applications_router
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # Schema is managed by Alembic migrations (see start.sh / scripts/migrate_local_db.sh).
+    # Schema is managed by Alembic migrations (`cd backend && alembic upgrade head`).
     # Refuse to serve requests against an outdated database instead of failing per request.
     assert_schema_current(engine)
     yield

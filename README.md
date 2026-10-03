@@ -39,7 +39,13 @@ Job Copilot is an AI-assisted career platform designed to help job seekers disco
    ```bash
    ./start.sh
    ```
-   This script will automatically run any pending database migrations and start the server on `http://127.0.0.1:8000`.
+   On first run, `start.sh` creates the schema for a brand-new empty database. If you already have a database with an older schema, it **refuses to start and changes nothing** until you migrate it explicitly (below).
+
+   **Upgrading an existing database** (back it up first!):
+   ```bash
+   cp data/copilot.db data/copilot.db.bak
+   cd backend && alembic upgrade head
+   ```
 
 ## Architecture & Contributions
 Job Copilot is built with FastAPI (Python) on the backend and Vite/React on the frontend (migration in progress), with SQLite for persistence.

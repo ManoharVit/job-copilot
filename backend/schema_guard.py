@@ -64,7 +64,7 @@ def assert_schema_current(engine: Engine) -> None:
     if current != head:
         raise SchemaNotCurrent(
             f"Database schema is at revision {current!r} but the code expects {head!r}. "
-            "Back up and migrate first: ./scripts/migrate_local_db.sh --confirm"
+            "Back up your database file first, then run: cd backend && alembic upgrade head"
         )
 
 
@@ -80,8 +80,8 @@ def main() -> int:
         return 0
     print(
         "ERROR: Your database exists but uses an older schema.\n"
-        "Nothing was changed. To migrate safely (a backup copy is made first), run from the project root:\n"
-        "    ./scripts/migrate_local_db.sh --confirm\n",
+        "Nothing was changed. Back up your database file, then run from the backend directory:\n"
+        "    alembic upgrade head\n",
         file=sys.stderr,
     )
     return 3

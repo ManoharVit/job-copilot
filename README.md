@@ -1,5 +1,11 @@
 # Job Copilot
 
+[![CI](https://github.com/ManoharVit/job-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/ManoharVit/job-copilot/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+![Application Tracker](docs/screenshots/application-tracker.png)
+
+
 Job Copilot is an AI-assisted career platform designed to help job seekers discover roles, tailor resumes, prepare for interviews, and track job applications efficiently. 
 
 > **⚠️ SECURITY & DEVELOPMENT NOTICE**
@@ -47,7 +53,71 @@ Job Copilot is an AI-assisted career platform designed to help job seekers disco
    cd backend && alembic upgrade head
    ```
 
-## Architecture & Contributions
-Job Copilot is built with FastAPI (Python) on the backend and Vite/React on the frontend (migration in progress), with SQLite for persistence.
+## Architecture
 
-Please see the [docs/modules/](docs/modules/) directory for architecture decisions and component-specific documentation.
+Job Copilot runs entirely on your machine: a FastAPI backend with a local SQLite database
+serves both the dashboard and the browser extension.
+
+```mermaid
+flowchart TD
+    subgraph Clients
+        UI["Dashboard (served at /)"]
+        EXT["Browser extension"]
+    end
+
+    subgraph API["API layer - FastAPI"]
+        V1["/api/v1/applications<br/>app_tracker/router.py"]
+        LEGACY["Legacy + extension routes<br/>server.py"]
+        AIR["AI and export routes<br/>server.py"]
+        ID["identity.py<br/>single local user"]
+    end
+
+    subgraph Services
+        SVC["ApplicationService<br/>ownership, lifecycle, history"]
+        COMPAT["tracker.py<br/>legacy compatibility adapter"]
+        DOMAIN["domain.py<br/>statuses + allowed transitions"]
+        PROF["profile_manager.py"]
+        MATCH["field_matcher.py"]
+        WRITER["ai_writer.py"]
+    end
+
+    subgraph Data
+        REPO["ApplicationRepository"]
+        ORM["SQLAlchemy models"]
+        DB[("SQLite<br/>schema managed by Alembic")]
+    end
+
+    GEMINI(["Google Gemini API<br/>only if GEMINI_API_KEY is set"])
+
+    UI --> V1
+    UI --> LEGACY
+    UI --> AIR
+    EXT --> LEGACY
+    V1 --> ID
+    LEGACY --> ID
+    V1 --> SVC
+    LEGACY --> COMPAT
+    LEGACY --> PROF
+    LEGACY --> MATCH
+    COMPAT --> SVC
+    SVC --> DOMAIN
+    SVC --> REPO
+    AIR --> WRITER
+    AIR --> PROF
+    WRITER -.-> GEMINI
+    REPO --> ORM
+    PROF --> ORM
+    ORM --> DB
+```
+
+- **Application Tracker** follows API → Service → Repository → Database. Business rules (ownership,
+  allowed status transitions, history) live in the service and domain layers, not the routes.
+- **Legacy routes** keep the original dashboard and extension working. They delegate to the same
+  service through `tracker.py`, so both paths enforce the same rules.
+- **AI features** are optional. With no API key, they make no external calls.
+
+Further reading:
+
+- [API reference with curl examples](docs/api.md), or interactive docs at `http://127.0.0.1:8000/docs` while the server runs
+- [Application Tracker design](docs/modules/application-tracker.md)
+- [Development notes](docs/development.md) and [Contributing guide](CONTRIBUTING.md)

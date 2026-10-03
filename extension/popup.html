@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Job Copilot</title>
+  <style>
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #fff;
+    }
+    .profile-card {
+      background: #1e1e1e;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border: 1px solid #333;
+    }
+    .profile-card div {
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      background: #1e1e1e;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+    .stat-item {
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      margin-top: 4px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn-secondary {
+      background: #333;
+    }
+    .error {
+      color: #ff5252;
+      font-size: 13px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .loader {
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Job Copilot</h2>
+  
+  <div id="errorMsg" class="error"></div>
+  
+  <div id="loader" class="loader">Loading...</div>
+
+  <div id="content" style="display: none;">
+    <div class="profile-card" id="profileCard">
+      <div id="pName" style="font-weight:bold;color:#fff;"></div>
+      <div id="pEmail"></div>
+      <div id="pPhone"></div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-item">
+        Applied Today
+        <div class="stat-value" id="sToday">0</div>
+      </div>
+      <div class="stat-item">
+        Total Applications
+        <div class="stat-value" id="sTotal">0</div>
+      </div>
+    </div>
+
+    <button id="autofillBtn" class="btn">✨ Autofill This Page</button>
+    <a href="http://localhost:8000" target="_blank" class="btn btn-secondary">Open Dashboard</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

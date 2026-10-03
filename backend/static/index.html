@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Copilot Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --accent: #e94560;
+            --accent-hover: #d63851;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --text-main: #f5f5f5;
+            --text-muted: #a0a0a0;
+            --border-color: #2a2a4a;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(233, 69, 96, 0.1);
+            border-left-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
+
+        /* Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        /* Forms */
+        .form-section {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-section h3 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        textarea,
+        select {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .checkbox-group {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input { margin: 0; }
+        .checkbox-group label { margin: 0; }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Tables */
+        .table-container {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        tr:hover { background-color: rgba(255,255,255,0.02); }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-applied { background-color: #2b3a67; color: #a3c2ff; }
+        .status-interview { background-color: #4a3b00; color: #ffda47; }
+        .status-rejected { background-color: #4a1c21; color: #ff8a99; }
+        .status-offer { background-color: #1e4620; color: #81c784; }
+
+        .status-select {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        /* Skills Tag Input */
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            min-height: 44px;
+            align-items: center;
+            cursor: text;
+        }
+
+        .skills-container:focus-within { border-color: var(--accent); }
+
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .skill-tag .remove-skill {
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            opacity: 0.8;
+        }
+
+        .skill-tag .remove-skill:hover { opacity: 1; }
+
+        .skills-input {
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            color: var(--text-main) !important;
+            padding: 4px !important;
+            font-size: 14px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 8px 15px;
+            border-radius: 20px;
+            width: 250px;
+        }
+
+        /* Delete button */
+        .btn-delete {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 4px 8px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+        .btn-delete:hover { color: #ff5252; }
+
+        /* Notes */
+        .notes-cell {
+            max-width: 200px;
+        }
+        .notes-input {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            resize: none;
+            font-family: inherit;
+        }
+        .notes-input:focus {
+            border-color: var(--accent);
+            color: var(--text-main);
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        .loading-spinner::before {
+            content: '';
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 999999;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+            transition: opacity 0.3s;
+        }
+        .toast.success { background: var(--success); }
+        .toast.error { background: #f44336; }
+        .toast.fadeout { opacity: 0; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                flex-direction: row;
+                padding: 10px;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .logo { margin: 0; }
+            .nav-item {
+                padding: 10px;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+            .nav-item:hover, .nav-item.active {
+                border-left: none;
+                border-bottom-color: var(--accent);
+            }
+            .nav-links { display: flex; }
+        }
+
+        /* Btn variants */
+        .btn-secondary {
+            background: #333;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-success { background: var(--success); }
+        .btn-warning { background: var(--warning); }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+    
+        /* AI Writer Styles */
+        .ai-tool-card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        .ai-tool-card:hover {
+            transform: translateY(-2px);
+        }
+        .ai-tool-card h3 {
+            margin: 0 0 5px 0;
+            color: var(--accent);
+            font-size: 20px;
+            border: none;
+            padding: 0;
+        }
+        .ai-tool-desc {
+            color: var(--text-muted);
+            margin: 0 0 20px 0;
+            font-size: 14px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ai-textarea {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            color: var(--text-main);
+            font-size: 14.5px;
+            line-height: 1.5;
+            resize: vertical;
+            margin-bottom: 15px;
+            display: block;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .ai-textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+            outline: none;
+        }
+        .ai-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            font-size: 15px;
+            margin-bottom: 15px;
+            display: block;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .ai-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+            outline: none;
+        }
+        .ai-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-btn:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+        .ai-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+        .ai-btn-secondary {
+            background-color: #2a2a4a;
+        }
+        .ai-btn-secondary:hover:not(:disabled) {
+            background-color: #3b3b6a;
+        }
+        .ai-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .ai-output-wrapper {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--border-color);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ai-actions-row {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .ai-output-textarea {
+            border-color: rgba(76, 175, 80, 0.5);
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">Job Copilot</div>
+        <div class="nav-links">
+            <div class="nav-item active" data-tab="dashboard">Dashboard</div>
+            <div class="nav-item" data-tab="profile">Profile</div>
+            <div class="nav-item" data-tab="applications">Applications</div>
+            <div class="nav-item" data-tab="aiwriter">✍️ AI Writer</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-pane active">
+            <h2>Dashboard</h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Applied Today</h3>
+                    <div class="value" id="stat-today">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Applications</h3>
+                    <div class="value" id="stat-total">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Interviews</h3>
+                    <div class="value" id="stat-interviews">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Offers</h3>
+                    <div class="value" id="stat-offers">-</div>
+                </div>
+            </div>
+
+            <h3>Recent Applications</h3>
+            <div class="table-container">
+                <table id="recent-apps-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>Platform</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" class="loading-spinner">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile-tab" class="tab-pane">
+            <div class="toolbar">
+                <h2>Your Profile</h2>
+                <button onclick="saveProfile()">Save Changes</button>
+            </div>
+
+            <form id="profile-form">
+                <div class="form-section">
+                    <h3>Personal Info</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="name" id="p_name">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" id="p_email">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone" id="p_phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" name="location" id="p_location">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select id="p_gender">
+                                <option value="">Prefer not to say</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Non-binary">Non-binary</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="text" name="date_of_birth" id="p_dob" placeholder="e.g. 1998-05-15">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Links</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>LinkedIn URL</label>
+                            <input type="text" name="linkedin_url" id="p_linkedin">
+                        </div>
+                        <div class="form-group">
+                            <label>GitHub URL</label>
+                            <input type="text" name="github_url" id="p_github">
+                        </div>
+                        <div class="form-group">
+                            <label>Portfolio URL</label>
+                            <input type="text" name="portfolio_url" id="p_portfolio">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Experience & Education</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Current Title</label>
+                            <input type="text" name="current_title" id="p_title">
+                        </div>
+                        <div class="form-group">
+                            <label>Years of Experience</label>
+                            <input type="number" name="years_experience" id="p_yoe">
+                        </div>
+                        <div class="form-group">
+                            <label>Education Level</label>
+                            <input type="text" name="education_level" id="p_edu">
+                        </div>
+                        <div class="form-group">
+                            <label>Graduation Year</label>
+                            <input type="number" name="graduation_year" id="p_grad">
+                        </div>
+                        <div class="form-group">
+                            <label>GPA</label>
+                            <input type="text" name="gpa" id="p_gpa">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Skills</h3>
+                    <div class="form-group">
+                        <label>Add skills (press Enter or comma to add)</label>
+                        <div class="skills-container" id="skills-container">
+                            <input type="text" class="skills-input" id="skills-input" placeholder="Type a skill...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Screening Details</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Expected CTC</label>
+                            <input type="text" name="expected_ctc" id="p_exp_ctc">
+                        </div>
+                        <div class="form-group">
+                            <label>Current CTC</label>
+                            <input type="text" name="current_ctc" id="p_cur_ctc">
+                        </div>
+                        <div class="form-group">
+                            <label>Notice Period</label>
+                            <input type="text" name="notice_period" id="p_notice">
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" name="willing_to_relocate" id="p_relocate">
+                            <label for="p_relocate">Willing to Relocate</label>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" name="work_authorized" id="p_auth">
+                            <label for="p_auth">Work Authorized</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Templates</h3>
+                    <div class="form-group">
+                        <label>Cover Letter / About Me</label>
+                        <textarea name="cover_letter_template" id="p_cover" rows="6"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Applications Tab -->
+        <div id="applications-tab" class="tab-pane">
+            <div class="toolbar">
+                <h2>All Applications</h2>
+                <div class="toolbar-actions">
+                    <input type="text" class="search-box" id="app-search" placeholder="Search company or role...">
+                    <button class="btn-sm btn-success" onclick="exportCSV()">📥 Export CSV</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="all-apps-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>Platform</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="loading-spinner">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        
+        <!-- AI Writer Tab -->
+        <div id="aiwriter-tab" class="tab-pane">
+            <h2 style="margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+                ✍️ AI Writer 
+                <span style="font-size:13px; font-weight: normal; background: rgba(233,69,96,0.1); color: var(--accent); padding: 4px 10px; border-radius: 12px; display: inline-block;">Human-like, no AI detection</span>
+            </h2>
+
+            <!-- Cover Letter Generator -->
+            <div class="ai-tool-card">
+                <h3>📝 Cover Letter Generator</h3>
+                <p class="ai-tool-desc">Paste the job description → get a tailored, human-sounding cover letter</p>
+                
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <input type="text" id="ai-company" placeholder="Target Company (e.g. Acme Corp)" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                    <input type="text" id="ai-product" placeholder="Specific Product/Team (e.g. MLOps Platform)" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                </div>
+                
+                <textarea id="ai-jd" class="ai-textarea" rows="5" placeholder="Paste the full job description here..."></textarea>
+                
+                <div style="text-align: right;">
+                    <button class="ai-btn" onclick="generateCoverLetter(this)">✨ Generate Cover Letter</button>
+                </div>
+                
+                <div id="ai-cl-output" class="ai-output-wrapper" style="display:none;">
+                    <textarea id="ai-cl-text" class="ai-textarea ai-output-textarea" rows="10"></textarea>
+                    <div class="ai-actions-row" id="ai-cl-actions">
+                        <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-cl-text', this.value, 'Cover Letter'); this.value='';">
+                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="pdf">PDF (.pdf)</option>
+                            <option value="docx">Word (.docx)</option>
+                            <option value="tex">LaTeX (.tex)</option>
+                        </select>
+
+                        <button class="ai-btn ai-btn-secondary" onclick="humanizeText('ai-cl-text', this)">🔄 Make More Human</button>
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-cl-text')">📋 Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Answer Generator -->
+            <div class="ai-tool-card">
+                <h3>💬 Answer Generator</h3>
+                <p class="ai-tool-desc">Generate answers for screening questions (e.g., "Why this role?", "Describe a challenge")</p>
+                
+                <input id="ai-question" class="ai-input" type="text" placeholder="Enter the screening question... (e.g. Why do you want to work here?)">
+                <textarea id="ai-answer-jd" class="ai-textarea" rows="3" placeholder="(Optional) Paste job description for context..."></textarea>
+                
+                <div style="text-align: right;">
+                    <button class="ai-btn" onclick="generateAnswer(this)">✨ Generate Answer</button>
+                </div>
+                
+                <div id="ai-answer-output" class="ai-output-wrapper" style="display:none;">
+                    <textarea id="ai-answer-text" class="ai-textarea ai-output-textarea" rows="5"></textarea>
+                    <div class="ai-actions-row" id="ai-answer-actions">
+                        <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-answer-text', this.value, 'Answer'); this.value='';">
+                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="pdf">PDF (.pdf)</option>
+                            <option value="docx">Word (.docx)</option>
+                            <option value="tex">LaTeX (.tex)</option>
+                        </select>
+
+                        <button class="ai-btn ai-btn-secondary" onclick="humanizeText('ai-answer-text', this)">🔄 Make More Human</button>
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-answer-text')">📋 Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resume Tailor -->
+            <div class="ai-tool-card">
+                <h3>📄 Resume Bullet Tailoring</h3>
+                <p class="ai-tool-desc">Paste your resume bullets + job description → get tailored bullets that match the JD</p>
+                
+                <div class="ai-grid-2">
+                    <textarea id="ai-bullets" class="ai-textarea" rows="7" placeholder="Enter resume bullets (one per line):&#10;- Built FastAPI microservice handling 2K requests/sec&#10;- Reduced query time from 12s to 0.8s using query optimization&#10;- Deployed Docker containers on AWS ECS"></textarea>
+                    <textarea id="ai-resume-jd" class="ai-textarea" rows="7" placeholder="Paste job description here..."></textarea>
+                </div>
+                
+                <div style="text-align: right;">
+                    <button class="ai-btn" onclick="tailorResume(this)">🎯 Tailor Bullets</button>
+                </div>
+                
+                <div id="ai-resume-output" class="ai-output-wrapper" style="display:none;">
+                    <textarea id="ai-resume-text" class="ai-textarea ai-output-textarea" rows="7"></textarea>
+                    <div class="ai-actions-row" id="ai-resume-actions">
+                        <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-resume-text', this.value, 'Tailored Bullets'); this.value='';">
+                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="pdf">PDF (.pdf)</option>
+                            <option value="docx">Word (.docx)</option>
+                            <option value="tex">LaTeX (.tex)</option>
+                        </select>
+
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-resume-text')">📋 Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Humanizer -->
+            <div class="ai-tool-card">
+                <h3>🔄 Text Humanizer</h3>
+                <p class="ai-tool-desc">Paste any AI-generated text → remove AI markers so it sounds genuinely human</p>
+                
+                <textarea id="ai-humanize-input" class="ai-textarea" rows="5" placeholder="Paste robotic-sounding text to humanize..."></textarea>
+                
+                <div style="text-align: right;">
+                    <button class="ai-btn" style="background-color: var(--warning); color: #000;" onclick="humanizeStandalone(this)">🔄 Humanize Text</button>
+                </div>
+                
+                <div id="ai-humanize-output-wrapper" class="ai-output-wrapper" style="display:none;">
+                    <textarea id="ai-humanize-output" class="ai-textarea ai-output-textarea" rows="5"></textarea>
+                    <div class="ai-actions-row" id="ai-humanize-actions">
+                        <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-humanize-output', this.value, 'Humanized Text'); this.value='';">
+                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="pdf">PDF (.pdf)</option>
+                            <option value="docx">Word (.docx)</option>
+                            <option value="tex">LaTeX (.tex)</option>
+                        </select>
+
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-humanize-output')">📋 Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interview Prep -->
+            <div class="ai-tool-card">
+                <h3>🎯 Interview Prep</h3>
+                <p class="ai-tool-desc">Paste a job description → get likely interview questions with talking points based on your profile</p>
+                
+                <textarea id="ai-interview-jd" class="ai-textarea" rows="6" placeholder="Paste job description here..."></textarea>
+                
+                <div style="text-align: right;">
+                    <button class="ai-btn" onclick="generateInterviewPrep(this)">🎓 Generate Interview Questions</button>
+                </div>
+                
+                <div id="ai-interview-output" class="ai-output-wrapper" style="display:none;">
+                    <textarea id="ai-interview-text" class="ai-textarea ai-output-textarea" rows="12"></textarea>
+                    <div class="ai-actions-row" id="ai-interview-actions">
+                        <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-interview-text', this.value, 'Interview Prep'); this.value='';">
+                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="pdf">PDF (.pdf)</option>
+                            <option value="docx">Word (.docx)</option>
+                            <option value="tex">LaTeX (.tex)</option>
+                        </select>
+
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-interview-text')">📋 Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_BASE = ''; // Relative path since served from same server
+        let allApplications = [];
+        let currentSkills = [];
+
+        // ──── Utility ────
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('fadeout');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ──── Navigation ────
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const tabId = item.dataset.tab;
+                document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+                document.getElementById(tabId + '-tab').classList.add('active');
+                item.classList.add('active');
+
+                if (tabId === 'dashboard') loadDashboard();
+                if (tabId === 'profile') loadProfile();
+                if (tabId === 'applications') loadApplications();
+            });
+        });
+
+        // ──── Dashboard ────
+
+        async function loadDashboard() {
+            try {
+                const [statsRes, appsRes] = await Promise.all([
+                    fetch(API_BASE + '/api/stats'),
+                    fetch(API_BASE + '/api/applications?limit=10')
+                ]);
+                const stats = await statsRes.json();
+                const apps = await appsRes.json();
+
+                document.getElementById('stat-today').textContent = stats.today || 0;
+                document.getElementById('stat-total').textContent = stats.total || 0;
+                document.getElementById('stat-interviews').textContent = stats.by_status?.interview || 0;
+                document.getElementById('stat-offers').textContent = stats.by_status?.offer || 0;
+
+                renderTable('recent-apps-table', apps, false);
+            } catch (err) {
+                console.error("Error loading dashboard", err);
+            }
+        }
+
+        // ──── Profile ────
+
+        async function loadProfile() {
+            try {
+                const res = await fetch(API_BASE + '/api/profile');
+                const profile = await res.json();
+
+                document.getElementById('p_name').value = profile.name || '';
+                document.getElementById('p_email').value = profile.email || '';
+                document.getElementById('p_phone').value = profile.phone || '';
+                document.getElementById('p_location').value = profile.location || '';
+                document.getElementById('p_gender').value = profile.gender || '';
+                document.getElementById('p_dob').value = profile.date_of_birth || '';
+
+                document.getElementById('p_linkedin').value = profile.linkedin_url || '';
+                document.getElementById('p_github').value = profile.github_url || '';
+                document.getElementById('p_portfolio').value = profile.portfolio_url || '';
+
+                document.getElementById('p_title').value = profile.current_title || '';
+                document.getElementById('p_yoe').value = profile.years_experience || 0;
+                document.getElementById('p_edu').value = profile.education_level || '';
+                document.getElementById('p_grad').value = profile.graduation_year || '';
+                document.getElementById('p_gpa').value = profile.gpa || '';
+
+                document.getElementById('p_exp_ctc').value = profile.expected_ctc || '';
+                document.getElementById('p_cur_ctc').value = profile.current_ctc || '';
+                document.getElementById('p_notice').value = profile.notice_period || '';
+
+                document.getElementById('p_relocate').checked = profile.willing_to_relocate;
+                document.getElementById('p_auth').checked = profile.work_authorized;
+
+                document.getElementById('p_cover').value = profile.cover_letter_template || '';
+
+                // Load skills
+                let skills = profile.skills || '[]';
+                if (typeof skills === 'string') {
+                    try { skills = JSON.parse(skills); } catch { skills = []; }
+                }
+                currentSkills = skills;
+                renderSkills();
+            } catch (err) {
+                console.error("Error loading profile", err);
+            }
+        }
+
+        // Skills tag editor
+        function renderSkills() {
+            const container = document.getElementById('skills-container');
+            const input = document.getElementById('skills-input');
+            // Remove existing tags
+            container.querySelectorAll('.skill-tag').forEach(t => t.remove());
+            // Insert tags before input
+            currentSkills.forEach((skill, idx) => {
+                const tag = document.createElement('span');
+                tag.className = 'skill-tag';
+                tag.innerHTML = `${escapeHtml(skill)} <span class="remove-skill" data-idx="${idx}">&times;</span>`;
+                container.insertBefore(tag, input);
+            });
+        }
+
+        document.getElementById('skills-container').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-skill')) {
+                const idx = parseInt(e.target.dataset.idx);
+                currentSkills.splice(idx, 1);
+                renderSkills();
+            } else {
+                document.getElementById('skills-input').focus();
+            }
+        });
+
+        document.getElementById('skills-input').addEventListener('keydown', (e) => {
+            const input = e.target;
+            if ((e.key === 'Enter' || e.key === ',') && input.value.trim()) {
+                e.preventDefault();
+                const skill = input.value.replace(',', '').trim();
+                if (skill && !currentSkills.includes(skill)) {
+                    currentSkills.push(skill);
+                    renderSkills();
+                }
+                input.value = '';
+            }
+            if (e.key === 'Backspace' && !input.value && currentSkills.length) {
+                currentSkills.pop();
+                renderSkills();
+            }
+        });
+
+        async function saveProfile() {
+            const data = {
+                name: document.getElementById('p_name').value,
+                email: document.getElementById('p_email').value,
+                phone: document.getElementById('p_phone').value,
+                location: document.getElementById('p_location').value,
+                gender: document.getElementById('p_gender').value,
+                date_of_birth: document.getElementById('p_dob').value,
+
+                linkedin_url: document.getElementById('p_linkedin').value,
+                github_url: document.getElementById('p_github').value,
+                portfolio_url: document.getElementById('p_portfolio').value,
+
+                current_title: document.getElementById('p_title').value,
+                years_experience: parseInt(document.getElementById('p_yoe').value) || 0,
+                education_level: document.getElementById('p_edu').value,
+                graduation_year: parseInt(document.getElementById('p_grad').value) || 0,
+                gpa: document.getElementById('p_gpa').value,
+
+                expected_ctc: document.getElementById('p_exp_ctc').value,
+                current_ctc: document.getElementById('p_cur_ctc').value,
+                notice_period: document.getElementById('p_notice').value,
+
+                willing_to_relocate: document.getElementById('p_relocate').checked,
+                work_authorized: document.getElementById('p_auth').checked,
+
+                cover_letter_template: document.getElementById('p_cover').value,
+                skills: JSON.stringify(currentSkills)
+            };
+
+            try {
+                const res = await fetch(API_BASE + '/api/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) showToast('✅ Profile saved!');
+                else showToast('Failed to save profile', 'error');
+            } catch (err) {
+                showToast('Error saving profile', 'error');
+                console.error(err);
+            }
+        }
+
+        // ──── Applications ────
+
+        async function loadApplications() {
+            try {
+                const res = await fetch(API_BASE + '/api/applications?limit=1000');
+                allApplications = await res.json();
+                renderTable('all-apps-table', allApplications, true);
+            } catch (err) {
+                console.error("Error loading applications", err);
+            }
+        }
+
+        document.getElementById('app-search').addEventListener('keyup', function() {
+            const query = this.value.toLowerCase();
+            const filtered = allApplications.filter(app =>
+                app.company.toLowerCase().includes(query) ||
+                app.title.toLowerCase().includes(query)
+            );
+            renderTable('all-apps-table', filtered, true);
+        });
+
+        function renderTable(tableId, apps, editableStatus) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            tbody.innerHTML = '';
+
+            if (!apps.length) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.setAttribute('colspan', editableStatus ? '7' : '5');
+                td.style.textAlign = 'center';
+                td.style.color = 'var(--text-muted)';
+                td.textContent = 'No applications yet';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+
+            apps.forEach(app => {
+                const date = new Date(app.applied_at).toLocaleDateString();
+                const tr = document.createElement('tr');
+
+                // Date
+                const tdDate = document.createElement('td');
+                tdDate.textContent = date;
+                tr.appendChild(tdDate);
+
+                // Company
+                const tdCompany = document.createElement('td');
+                const strong = document.createElement('strong');
+                strong.textContent = app.company;
+                tdCompany.appendChild(strong);
+                tr.appendChild(tdCompany);
+
+                // Role (with link if URL exists)
+                const tdRole = document.createElement('td');
+                if (app.url) {
+                    const a = document.createElement('a');
+                    a.href = app.url;
+                    a.target = '_blank';
+                    a.style.color = 'var(--text-main)';
+                    a.textContent = app.title;
+                    tdRole.appendChild(a);
+                } else {
+                    tdRole.textContent = app.title;
+                }
+                tr.appendChild(tdRole);
+
+                // Platform
+                const tdPlatform = document.createElement('td');
+                tdPlatform.textContent = app.platform;
+                tr.appendChild(tdPlatform);
+
+                // Status
+                const tdStatus = document.createElement('td');
+                if (editableStatus) {
+                    const select = document.createElement('select');
+                    select.className = 'status-select';
+                    ['applied', 'interview', 'rejected', 'offer'].forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s;
+                        opt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+                        if (s === app.status) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                    select.addEventListener('change', () => updateStatus(app.id, select.value));
+                    tdStatus.appendChild(select);
+                } else {
+                    const badge = document.createElement('span');
+                    badge.className = `status-badge status-${app.status}`;
+                    badge.textContent = app.status;
+                    tdStatus.appendChild(badge);
+                }
+                tr.appendChild(tdStatus);
+
+                if (editableStatus) {
+                    // Notes
+                    const tdNotes = document.createElement('td');
+                    tdNotes.className = 'notes-cell';
+                    const notesInput = document.createElement('textarea');
+                    notesInput.className = 'notes-input';
+                    notesInput.rows = 1;
+                    notesInput.placeholder = 'Add notes...';
+                    notesInput.value = app.notes || '';
+                    notesInput.addEventListener('blur', () => updateNotes(app.id, notesInput.value));
+                    tdNotes.appendChild(notesInput);
+                    tr.appendChild(tdNotes);
+
+                    // Delete
+                    const tdDel = document.createElement('td');
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'btn-delete';
+                    delBtn.title = 'Delete application';
+                    delBtn.textContent = '🗑️';
+                    delBtn.addEventListener('click', () => deleteApplication(app.id));
+                    tdDel.appendChild(delBtn);
+                    tr.appendChild(tdDel);
+                }
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateStatus(appId, newStatus) {
+            try {
+                await fetch(`${API_BASE}/api/applications/${appId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const app = allApplications.find(a => a.id === appId);
+                if (app) app.status = newStatus;
+            } catch (err) {
+                console.error("Error updating status", err);
+                showToast("Failed to update status", 'error');
+            }
+        }
+
+        async function updateNotes(appId, notes) {
+            try {
+                await fetch(`${API_BASE}/api/applications/${appId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes })
+                });
+                const app = allApplications.find(a => a.id === appId);
+                if (app) app.notes = notes;
+            } catch (err) {
+                console.error("Error updating notes", err);
+            }
+        }
+
+        async function deleteApplication(appId) {
+            if (!confirm('Delete this application?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/applications/${appId}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    allApplications = allApplications.filter(a => a.id !== appId);
+                    renderTable('all-apps-table', allApplications, true);
+                    showToast('Application deleted');
+                }
+            } catch (err) {
+                showToast('Failed to delete', 'error');
+            }
+        }
+
+        async function exportCSV() {
+            try {
+                const res = await fetch(`${API_BASE}/api/export`);
+                if (!res.ok) throw new Error('Export failed');
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `job-applications-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('📥 CSV downloaded!');
+            } catch (err) {
+                showToast('Export failed', 'error');
+            }
+        }
+
+        // ──── AI Writer ────
+
+        async function generateCoverLetter(btn) {
+            const jd = document.getElementById('ai-jd').value.trim();
+            const comp = document.getElementById('ai-company').value.trim();
+            const prod = document.getElementById('ai-product').value.trim();
+            if (!jd) { showToast('Please paste a job description', 'error'); return; }
+            if (!comp) { showToast('Please enter the target company', 'error'); return; }
+
+            btn.textContent = '⏳ Generating...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/generate-cover-letter`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        job_description: jd,
+                        company_name: comp,
+                        target_product: prod
+                    })
+                });
+                const data = await resp.json();
+                const ta = document.getElementById('ai-cl-text');
+                ta.value = data.cover_letter || 'No output';
+                
+                document.getElementById('ai-cl-output').style.display = 'block';
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            } finally {
+                btn.textContent = 'Generate Cover Letter';
+                btn.disabled = false;
+            }
+        }
+
+        async function generateAnswer(btn) {
+            const q = document.getElementById('ai-question').value.trim();
+            if (!q) { showToast('Please enter a question', 'error'); return; }
+
+            btn.textContent = '⏳ Generating...';
+            btn.disabled = true;
+
+            try {
+                const jd = document.getElementById('ai-answer-jd').value.trim();
+                const resp = await fetch(`${API_BASE}/api/generate-answer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: q, job_description: jd })
+                });
+                const data = await resp.json();
+                const ta = document.getElementById('ai-answer-text');
+                ta.value = data.answer || 'No output';
+                
+                document.getElementById('ai-answer-output').style.display = 'block';
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            } finally {
+                btn.textContent = 'Generate Answer';
+                btn.disabled = false;
+            }
+        }
+
+        async function tailorResume(btn) {
+            const bulletsRaw = document.getElementById('ai-bullets').value.trim();
+            const jd = document.getElementById('ai-resume-jd').value.trim();
+            if (!bulletsRaw || !jd) { showToast('Please enter both bullets and job description', 'error'); return; }
+
+            const bullets = bulletsRaw.split('\n').map(b => b.replace(/^[-*]\s*/, '').trim()).filter(b => b);
+
+            btn.textContent = '⏳ Tailoring...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/tailor-resume`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bullets, job_description: jd })
+                });
+                const data = await resp.json();
+                const ta = document.getElementById('ai-resume-text');
+                ta.value = (data.bullets || []).map(b => `- ${b}`).join('\n');
+                
+                document.getElementById('ai-resume-output').style.display = 'block';
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            } finally {
+                btn.textContent = 'Tailor Bullets';
+                btn.disabled = false;
+            }
+        }
+
+        async function humanizeText(textareaId, btn) {
+            const ta = document.getElementById(textareaId);
+            const text = ta.value.trim();
+            if (!text) return;
+
+            if (btn) { btn.textContent = '⏳ Humanizing...'; btn.disabled = true; }
+            ta.style.opacity = '0.5';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/humanize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await resp.json();
+                ta.value = data.text || text;
+                ta.style.color = '#4caf50';
+                showToast('✅ Text humanized!');
+            } catch(e) {
+                showToast('Humanize failed', 'error');
+            } finally {
+                ta.style.opacity = '1';
+                if (btn) { btn.textContent = '🔄 Make More Human'; btn.disabled = false; }
+            }
+        }
+
+        async function humanizeStandalone(btn) {
+            const input = document.getElementById('ai-humanize-input').value.trim();
+            if (!input) { showToast('Please paste text to humanize', 'error'); return; }
+
+            btn.textContent = '⏳ Humanizing...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/humanize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: input })
+                });
+                const data = await resp.json();
+                const out = document.getElementById('ai-humanize-output');
+                out.value = data.text || input;
+                
+                document.getElementById('ai-humanize-output-wrapper').style.display = 'block';
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            } finally {
+                btn.textContent = '🔄 Humanize';
+                btn.disabled = false;
+            }
+        }
+
+        async function generateInterviewPrep(btn) {
+            const jd = document.getElementById('ai-interview-jd').value.trim();
+            if (!jd) { showToast('Please paste a job description', 'error'); return; }
+
+            btn.textContent = '⏳ Generating...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/interview-prep`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ job_description: jd })
+                });
+                const data = await resp.json();
+                const ta = document.getElementById('ai-interview-text');
+                ta.value = data.prep || 'No output';
+                
+                document.getElementById('ai-interview-output').style.display = 'block';
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            } finally {
+                btn.textContent = 'Generate Interview Questions';
+                btn.disabled = false;
+            }
+        }
+
+        
+        async function exportDocument(textareaId, format, docType = 'Document') {
+            if (!format) return;
+            const text = document.getElementById(textareaId).value.trim();
+            if (!text) { showToast('No text to export', 'error'); return; }
+
+            try {
+                showToast(`⏳ Generating ${format.toUpperCase()}...`);
+                const resp = await fetch(`${API_BASE}/api/export-doc`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, format, doc_type: docType })
+                });
+                
+                if (!resp.ok) throw new Error('Export failed');
+                
+                let filename = `export.${format}`;
+                const disposition = resp.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                    if (matches != null && matches[1]) { 
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast(`✅ ${format.toUpperCase()} downloaded successfully!`);
+            } catch (err) {
+                console.error(err);
+                showToast(`Failed to export ${format}`, 'error');
+            }
+        }
+
+        function copyText(textareaId) {
+            const ta = document.getElementById(textareaId);
+            navigator.clipboard.writeText(ta.value).then(() => {
+                showToast('📋 Copied to clipboard!');
+            });
+        }
+
+        // ──── Init ────
+        loadDashboard();
+    </script>
+</body>
+</html>

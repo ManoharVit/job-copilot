@@ -1,0 +1,9 @@
+# Development / test dependencies (human-edited). Compile with:
+#   .venv/bin/pip-compile --generate-hashes --allow-unsafe -o requirements-dev.txt requirements-dev.in
+# Constrained to the runtime lock so dev and runtime versions never diverge.
+-c requirements.txt
+pytest>=9.1.1,<10
+pytest-cov>=7.1.0,<8
+httpx>=0.28.1,<0.29
+pip-audit>=2.10.1,<3
+pip-tools>=7.6.1,<8

@@ -1,0 +1,77 @@
+.jc-floating-btn {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 999999 !important;
+  background: linear-gradient(135deg, #6e8efb, #a777e3) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 24px !important;
+  padding: 12px 24px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+.jc-floating-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4) !important;
+}
+
+/* AI Generate button next to textareas */
+.jc-ai-btn {
+  display: inline-block !important;
+  margin-top: 4px !important;
+  background: linear-gradient(135deg, #ff6b6b, #ffa500) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 4px 12px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+  transition: transform 0.15s, opacity 0.15s !important;
+  z-index: 99998 !important;
+}
+
+.jc-ai-btn:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
+}
+
+.jc-ai-btn:disabled {
+  opacity: 0.7 !important;
+  cursor: wait !important;
+}
+
+.jc-toast {
+  position: fixed !important;
+  top: 24px !important;
+  right: 24px !important;
+  z-index: 999999 !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+  transition: opacity 0.5s ease-out !important;
+}
+
+.jc-success {
+  background: #4caf50 !important;
+}
+
+.jc-error {
+  background: #f44336 !important;
+}
+
+.jc-fade-out {
+  opacity: 0 !important;
+}

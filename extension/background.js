@@ -9,12 +9,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-chrome.commands.onCommand.addListener((command) => {
-    if (command === 'autofill') {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]) {
-                chrome.tabs.sendMessage(tabs[0].id, { action: 'autofill' });
-            }
-        });
+
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'fetchAPI') {
+        fetch(request.url, request.options)
+            .then(res => {
+                if (!res.ok) {
+                    return res.text().then(text => Promise.reject(`Error ${res.status}: ${text}`));
+                }
+                return res.json();
+            })
+            .then(data => sendResponse({ success: true, data }))
+            .catch(error => sendResponse({ success: false, error: error.toString() }));
+        return true; // Keep the message channel open for async response
     }
 });

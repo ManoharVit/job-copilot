@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   const content = document.getElementById('content');
   const errorMsg = document.getElementById('errorMsg');
-  const autofillBtn = document.getElementById('autofillBtn');
 
   try {
     const [profileRes, statsRes] = await Promise.all([
@@ -38,18 +37,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.stats').style.display = 'none';
   }
 
-  autofillBtn.addEventListener('click', async () => {
-    autofillBtn.innerText = '⏳ Filling...';
-    try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab) {
-        chrome.tabs.sendMessage(tab.id, { action: 'autofill' }, (response) => {
-          autofillBtn.innerText = '✨ Autofill This Page';
-        });
-      }
-    } catch(e) {
-      console.error(e);
-      autofillBtn.innerText = '✨ Autofill This Page';
-    }
-  });
 });

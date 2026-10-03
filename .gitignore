@@ -12,3 +12,4 @@ static_*
 coverage.xml
 htmlcov/
 baselines/
+.agents/

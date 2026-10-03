@@ -11,3 +11,4 @@ static_*
 .coverage
 coverage.xml
 htmlcov/
+baselines/

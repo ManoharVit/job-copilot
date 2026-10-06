@@ -533,7 +533,7 @@
             <div class="nav-item active" data-tab="dashboard">Dashboard</div>
             <div class="nav-item" data-tab="profile">Profile</div>
             <div class="nav-item" data-tab="applications">Applications</div>
-            <div class="nav-item" data-tab="aiwriter">✍️ AI Writer</div>
+            <div class="nav-item" data-tab="aiwriter">AI Writer</div>
         </div>
     </div>
 
@@ -721,7 +721,7 @@
                 <h2>All Applications</h2>
                 <div class="toolbar-actions">
                     <input type="text" class="search-box" id="app-search" placeholder="Search company or role...">
-                    <button class="btn-sm btn-success" onclick="exportCSV()">📥 Export CSV</button>
+                    <button class="btn-sm btn-success" onclick="exportCSV()">Export CSV</button>
                 </div>
             </div>
 
@@ -749,13 +749,13 @@
         <!-- AI Writer Tab -->
         <div id="aiwriter-tab" class="tab-pane">
             <h2 style="margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
-                ✍️ AI Writer 
+                AI Writer 
                 <span style="font-size:13px; font-weight: normal; background: rgba(233,69,96,0.1); color: var(--accent); padding: 4px 10px; border-radius: 12px; display: inline-block;">Human-like, no AI detection</span>
             </h2>
 
             <!-- Cover Letter Generator -->
             <div class="ai-tool-card">
-                <h3>📝 Cover Letter Generator</h3>
+                <h3>Cover Letter Generator</h3>
                 <p class="ai-tool-desc">Paste the job description → get a tailored, human-sounding cover letter</p>
                 
                 
@@ -767,56 +767,56 @@
                 <textarea id="ai-jd" class="ai-textarea" rows="5" placeholder="Paste the full job description here..."></textarea>
                 
                 <div style="text-align: right;">
-                    <button class="ai-btn" onclick="generateCoverLetter(this)">✨ Generate Cover Letter</button>
+                    <button class="ai-btn" onclick="generateCoverLetter(this)">Generate Cover Letter</button>
                 </div>
                 
                 <div id="ai-cl-output" class="ai-output-wrapper" style="display:none;">
                     <textarea id="ai-cl-text" class="ai-textarea ai-output-textarea" rows="10"></textarea>
                     <div class="ai-actions-row" id="ai-cl-actions">
                         <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-cl-text', this.value, 'Cover Letter'); this.value='';">
-                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="" selected disabled>Export As...</option>
                             <option value="pdf">PDF (.pdf)</option>
                             <option value="docx">Word (.docx)</option>
                             <option value="tex">LaTeX (.tex)</option>
                         </select>
 
-                        <button class="ai-btn ai-btn-secondary" onclick="humanizeText('ai-cl-text', this)">🔄 Make More Human</button>
-                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-cl-text')">📋 Copy to Clipboard</button>
+                        <button class="ai-btn ai-btn-secondary" onclick="humanizeText('ai-cl-text', this)">Make More Human</button>
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-cl-text')">Copy to Clipboard</button>
                     </div>
                 </div>
             </div>
 
             <!-- Answer Generator -->
             <div class="ai-tool-card">
-                <h3>💬 Answer Generator</h3>
+                <h3>Answer Generator</h3>
                 <p class="ai-tool-desc">Generate answers for screening questions (e.g., "Why this role?", "Describe a challenge")</p>
                 
                 <input id="ai-question" class="ai-input" type="text" placeholder="Enter the screening question... (e.g. Why do you want to work here?)">
                 <textarea id="ai-answer-jd" class="ai-textarea" rows="3" placeholder="(Optional) Paste job description for context..."></textarea>
                 
                 <div style="text-align: right;">
-                    <button class="ai-btn" onclick="generateAnswer(this)">✨ Generate Answer</button>
+                    <button class="ai-btn" onclick="generateAnswer(this)">Generate Answer</button>
                 </div>
                 
                 <div id="ai-answer-output" class="ai-output-wrapper" style="display:none;">
                     <textarea id="ai-answer-text" class="ai-textarea ai-output-textarea" rows="5"></textarea>
                     <div class="ai-actions-row" id="ai-answer-actions">
                         <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-answer-text', this.value, 'Answer'); this.value='';">
-                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="" selected disabled>Export As...</option>
                             <option value="pdf">PDF (.pdf)</option>
                             <option value="docx">Word (.docx)</option>
                             <option value="tex">LaTeX (.tex)</option>
                         </select>
 
-                        <button class="ai-btn ai-btn-secondary" onclick="humanizeText('ai-answer-text', this)">🔄 Make More Human</button>
-                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-answer-text')">📋 Copy to Clipboard</button>
+                        <button class="ai-btn ai-btn-secondary" onclick="humanizeText('ai-answer-text', this)">Make More Human</button>
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-answer-text')">Copy to Clipboard</button>
                     </div>
                 </div>
             </div>
 
             <!-- Resume Tailor -->
             <div class="ai-tool-card">
-                <h3>📄 Resume Bullet Tailoring</h3>
+                <h3>Resume Bullet Tailoring</h3>
                 <p class="ai-tool-desc">Paste your resume bullets + job description → get tailored bullets that match the JD</p>
                 
                 <div class="ai-grid-2">
@@ -825,72 +825,72 @@
                 </div>
                 
                 <div style="text-align: right;">
-                    <button class="ai-btn" onclick="tailorResume(this)">🎯 Tailor Bullets</button>
+                    <button class="ai-btn" onclick="tailorResume(this)">Tailor Bullets</button>
                 </div>
                 
                 <div id="ai-resume-output" class="ai-output-wrapper" style="display:none;">
                     <textarea id="ai-resume-text" class="ai-textarea ai-output-textarea" rows="7"></textarea>
                     <div class="ai-actions-row" id="ai-resume-actions">
                         <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-resume-text', this.value, 'Tailored Bullets'); this.value='';">
-                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="" selected disabled>Export As...</option>
                             <option value="pdf">PDF (.pdf)</option>
                             <option value="docx">Word (.docx)</option>
                             <option value="tex">LaTeX (.tex)</option>
                         </select>
 
-                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-resume-text')">📋 Copy to Clipboard</button>
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-resume-text')">Copy to Clipboard</button>
                     </div>
                 </div>
             </div>
 
             <!-- Humanizer -->
             <div class="ai-tool-card">
-                <h3>🔄 Text Humanizer</h3>
+                <h3>Text Humanizer</h3>
                 <p class="ai-tool-desc">Paste any AI-generated text → remove AI markers so it sounds genuinely human</p>
                 
                 <textarea id="ai-humanize-input" class="ai-textarea" rows="5" placeholder="Paste robotic-sounding text to humanize..."></textarea>
                 
                 <div style="text-align: right;">
-                    <button class="ai-btn" style="background-color: var(--warning); color: #000;" onclick="humanizeStandalone(this)">🔄 Humanize Text</button>
+                    <button class="ai-btn" style="background-color: var(--warning); color: #000;" onclick="humanizeStandalone(this)">Humanize Text</button>
                 </div>
                 
                 <div id="ai-humanize-output-wrapper" class="ai-output-wrapper" style="display:none;">
                     <textarea id="ai-humanize-output" class="ai-textarea ai-output-textarea" rows="5"></textarea>
                     <div class="ai-actions-row" id="ai-humanize-actions">
                         <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-humanize-output', this.value, 'Humanized Text'); this.value='';">
-                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="" selected disabled>Export As...</option>
                             <option value="pdf">PDF (.pdf)</option>
                             <option value="docx">Word (.docx)</option>
                             <option value="tex">LaTeX (.tex)</option>
                         </select>
 
-                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-humanize-output')">📋 Copy to Clipboard</button>
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-humanize-output')">Copy to Clipboard</button>
                     </div>
                 </div>
             </div>
 
             <!-- Interview Prep -->
             <div class="ai-tool-card">
-                <h3>🎯 Interview Prep</h3>
+                <h3>Interview Prep</h3>
                 <p class="ai-tool-desc">Paste a job description → get likely interview questions with talking points based on your profile</p>
                 
                 <textarea id="ai-interview-jd" class="ai-textarea" rows="6" placeholder="Paste job description here..."></textarea>
                 
                 <div style="text-align: right;">
-                    <button class="ai-btn" onclick="generateInterviewPrep(this)">🎓 Generate Interview Questions</button>
+                    <button class="ai-btn" onclick="generateInterviewPrep(this)">Generate Interview Questions</button>
                 </div>
                 
                 <div id="ai-interview-output" class="ai-output-wrapper" style="display:none;">
                     <textarea id="ai-interview-text" class="ai-textarea ai-output-textarea" rows="12"></textarea>
                     <div class="ai-actions-row" id="ai-interview-actions">
                         <select class="ai-input" style="width: auto; margin-bottom: 0; padding: 10px; cursor: pointer;" onchange="exportDocument('ai-interview-text', this.value, 'Interview Prep'); this.value='';">
-                            <option value="" selected disabled>💾 Export As...</option>
+                            <option value="" selected disabled>Export As...</option>
                             <option value="pdf">PDF (.pdf)</option>
                             <option value="docx">Word (.docx)</option>
                             <option value="tex">LaTeX (.tex)</option>
                         </select>
 
-                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-interview-text')">📋 Copy to Clipboard</button>
+                        <button class="ai-btn" style="background-color: var(--success);" onclick="copyText('ai-interview-text')">Copy to Clipboard</button>
                     </div>
                 </div>
             </div>
@@ -1084,7 +1084,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (res.ok) showToast('✅ Profile saved!');
+                if (res.ok) showToast('Success: Profile saved!');
                 else showToast('Failed to save profile', 'error');
             } catch (err) {
                 showToast('Error saving profile', 'error');
@@ -1204,7 +1204,7 @@
                     const delBtn = document.createElement('button');
                     delBtn.className = 'btn-delete';
                     delBtn.title = 'Delete application';
-                    delBtn.textContent = '🗑️';
+                    delBtn.innerHTML = '<span class="sr-only">Delete</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>';
                     delBtn.addEventListener('click', () => deleteApplication(app.id));
                     tdDel.appendChild(delBtn);
                     tr.appendChild(tdDel);
@@ -1270,7 +1270,7 @@
                 a.download = `job-applications-${new Date().toISOString().split('T')[0]}.csv`;
                 a.click();
                 URL.revokeObjectURL(url);
-                showToast('📥 CSV downloaded!');
+                showToast('Success: CSV downloaded!');
             } catch (err) {
                 showToast('Export failed', 'error');
             }
@@ -1285,7 +1285,7 @@
             if (!jd) { showToast('Please paste a job description', 'error'); return; }
             if (!comp) { showToast('Please enter the target company', 'error'); return; }
 
-            btn.textContent = '⏳ Generating...';
+            btn.textContent = 'Generating...';
             btn.disabled = true;
 
             try {
@@ -1315,7 +1315,7 @@
             const q = document.getElementById('ai-question').value.trim();
             if (!q) { showToast('Please enter a question', 'error'); return; }
 
-            btn.textContent = '⏳ Generating...';
+            btn.textContent = 'Generating...';
             btn.disabled = true;
 
             try {
@@ -1345,7 +1345,7 @@
 
             const bullets = bulletsRaw.split('\n').map(b => b.replace(/^[-*]\s*/, '').trim()).filter(b => b);
 
-            btn.textContent = '⏳ Tailoring...';
+            btn.textContent = 'Tailoring...';
             btn.disabled = true;
 
             try {
@@ -1372,7 +1372,7 @@
             const text = ta.value.trim();
             if (!text) return;
 
-            if (btn) { btn.textContent = '⏳ Humanizing...'; btn.disabled = true; }
+            if (btn) { btn.textContent = 'Humanizing...'; btn.disabled = true; }
             ta.style.opacity = '0.5';
 
             try {
@@ -1384,12 +1384,12 @@
                 const data = await resp.json();
                 ta.value = data.text || text;
                 ta.style.color = '#4caf50';
-                showToast('✅ Text humanized!');
+                showToast('Success: Text humanized!');
             } catch(e) {
                 showToast('Humanize failed', 'error');
             } finally {
                 ta.style.opacity = '1';
-                if (btn) { btn.textContent = '🔄 Make More Human'; btn.disabled = false; }
+                if (btn) { btn.textContent = 'Make More Human'; btn.disabled = false; }
             }
         }
 
@@ -1397,7 +1397,7 @@
             const input = document.getElementById('ai-humanize-input').value.trim();
             if (!input) { showToast('Please paste text to humanize', 'error'); return; }
 
-            btn.textContent = '⏳ Humanizing...';
+            btn.textContent = 'Humanizing...';
             btn.disabled = true;
 
             try {
@@ -1414,7 +1414,7 @@
             } catch(e) {
                 showToast('Error: ' + e.message, 'error');
             } finally {
-                btn.textContent = '🔄 Humanize';
+                btn.textContent = 'Humanize';
                 btn.disabled = false;
             }
         }
@@ -1423,7 +1423,7 @@
             const jd = document.getElementById('ai-interview-jd').value.trim();
             if (!jd) { showToast('Please paste a job description', 'error'); return; }
 
-            btn.textContent = '⏳ Generating...';
+            btn.textContent = 'Generating...';
             btn.disabled = true;
 
             try {
@@ -1452,7 +1452,7 @@
             if (!text) { showToast('No text to export', 'error'); return; }
 
             try {
-                showToast(`⏳ Generating ${format.toUpperCase()}...`);
+                showToast(`Generating ${format.toUpperCase()}...`);
                 const resp = await fetch(`${API_BASE}/api/export-doc`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1477,7 +1477,7 @@
                 a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
-                showToast(`✅ ${format.toUpperCase()} downloaded successfully!`);
+                showToast(`Success: ${format.toUpperCase()} downloaded successfully!`);
             } catch (err) {
                 console.error(err);
                 showToast(`Failed to export ${format}`, 'error');
@@ -1487,7 +1487,7 @@
         function copyText(textareaId) {
             const ta = document.getElementById(textareaId);
             navigator.clipboard.writeText(ta.value).then(() => {
-                showToast('📋 Copied to clipboard!');
+                showToast('Copied to clipboard!');
             });
         }
 

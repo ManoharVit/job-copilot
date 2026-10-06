@@ -8,7 +8,7 @@
 
 Job Copilot is an AI-assisted career platform designed to help job seekers discover roles, tailor resumes, prepare for interviews, and track job applications efficiently. 
 
-> **⚠️ SECURITY & DEVELOPMENT NOTICE**
+> **SECURITY & DEVELOPMENT NOTICE**
 > 
 > This project is currently in **active development** and is designed for **local use only**. 
 > - **No Authentication Yet:** The server binds to `127.0.0.1` and assumes a single local user. Do not deploy this to a public server or expose it to the internet.

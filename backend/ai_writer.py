@@ -30,7 +30,9 @@ except Exception as _e:
     client = None
     types = None
     AI_AVAILABLE = False
-    print(f"⚠️  Gemini AI not available: {_e}")
+    import logging
+    logger = logging.getLogger("job_copilot.ai")
+    logger.warning("Gemini AI not available. Check credentials or network connectivity.")
 
 MODEL = "gemini-3.5-flash"
 

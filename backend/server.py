@@ -28,17 +28,22 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Job Copilot API", lifespan=lifespan)
 
+from settings import get_settings
+
 # Allow CORS for extension
+settings = get_settings()
+allowed_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+
+if settings.cors_extension_origin:
+    allowed_origins.append(settings.cors_extension_origin.strip())
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "chrome-extension://mhbjkfhgfflooeplobpgpicndphcminm",
-        "http://localhost:3000"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Content-Type"],
+    max_age=600,
 )
 app.add_middleware(RequestIDMiddleware)
 register_error_handlers(app)

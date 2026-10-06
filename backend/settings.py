@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     # so the server must stay bound to 127.0.0.1.
     auth_mode: Literal["local"] = "local"
 
+    # CORS configuration
+    cors_origins: str = "http://127.0.0.1:8000,http://localhost:5173,http://127.0.0.1:5173"
+    cors_extension_origin: str | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:

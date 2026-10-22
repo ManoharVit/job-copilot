@@ -41,12 +41,22 @@ body {
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     font-size: 24px;
     font-weight: bold;
-    color: var(--accent);
+    color: var(--text-main);
     text-align: center;
     margin-bottom: 30px;
     padding: 0 20px;
+}
+
+.brand-mark {
+    display: block;
+    flex: 0 0 auto;
+    object-fit: contain;
 }
 
 .nav-item {

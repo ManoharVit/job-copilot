@@ -55,6 +55,7 @@ def test_every_request_body_has_an_example(spec):
 
 def test_dashboard_route_is_not_in_schema(spec):
     assert "/" not in spec["paths"]
+    assert "/legacy" not in spec["paths"]
 
 
 def _examples_for(spec, path, method):

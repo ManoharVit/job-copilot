@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { requestJSON } from '../api';
 import { ToastContext } from '../ToastContext';
 
 function ApplicationsTab() {
@@ -13,8 +14,7 @@ function ApplicationsTab() {
 
     const loadApplications = async () => {
         try {
-            const res = await fetch('/api/applications?limit=1000');
-            const data = await res.json();
+            const data = await requestJSON('/api/applications?limit=1000');
             setAllApps(data);
         } catch (err) {
             console.error("Error loading applications", err);
@@ -25,7 +25,7 @@ function ApplicationsTab() {
 
     const updateStatus = async (appId, newStatus) => {
         try {
-            await fetch(`/api/applications/${appId}`, {
+            await requestJSON(`/api/applications/${appId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -39,7 +39,7 @@ function ApplicationsTab() {
 
     const updateNotes = async (appId, notes) => {
         try {
-            await fetch(`/api/applications/${appId}`, {
+            await requestJSON(`/api/applications/${appId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ notes })
@@ -47,6 +47,7 @@ function ApplicationsTab() {
             setAllApps(prev => prev.map(a => a.id === appId ? { ...a, notes } : a));
         } catch (err) {
             console.error("Error updating notes", err);
+            showToast("Failed to save notes", 'error');
         }
     };
 
@@ -54,10 +55,9 @@ function ApplicationsTab() {
         if (!window.confirm('Delete this application?')) return;
         try {
             const res = await fetch(`/api/applications/${appId}`, { method: 'DELETE' });
-            if (res.ok) {
-                setAllApps(prev => prev.filter(a => a.id !== appId));
-                showToast('Application deleted');
-            }
+            if (!res.ok) throw new Error('Delete failed');
+            setAllApps(prev => prev.filter(a => a.id !== appId));
+            showToast('Application deleted');
         } catch (err) {
             showToast('Failed to delete', 'error');
         }
@@ -125,7 +125,7 @@ function ApplicationsTab() {
                                     <td>{new Date(app.applied_at).toLocaleDateString()}</td>
                                     <td><strong>{app.company}</strong></td>
                                     <td>
-                                        {app.url ? (
+                                        {/^https?:\/\//i.test(app.url || '') ? (
                                             <a href={app.url} target="_blank" rel="noreferrer" style={{ color: 'var(--text-main)' }}>
                                                 {app.title}
                                             </a>

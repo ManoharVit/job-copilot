@@ -109,3 +109,14 @@ def test_csv_export_header_and_formula_injection_guard(client):
     rows = list(csv.reader(io.StringIO(response.text)))
     assert rows[0] == ["ID", "URL", "Title", "Company", "Platform", "Status", "Applied At", "Notes", "Job Description"]
     assert rows[1][2].startswith("'=") and rows[1][3] == "'@Acme" and rows[1][7] == "'+1 call"
+
+
+def test_dashboard_and_legacy_endpoints_serve_valid_html(client):
+    res_root = client.get("/")
+    assert res_root.status_code == 200
+    assert 'id="root"' in res_root.text
+    assert "/static/assets/" in res_root.text
+
+    res_legacy = client.get("/legacy")
+    assert res_legacy.status_code == 200
+    assert 'id="dashboard-tab"' in res_legacy.text

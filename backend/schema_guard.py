@@ -41,7 +41,8 @@ def alembic_config(database_url: str | None = None) -> Config:
 
 def head_revision() -> str:
     head = ScriptDirectory.from_config(alembic_config()).get_current_head()
-    assert head is not None, "no migrations found"
+    if head is None:
+        raise SchemaNotCurrent("no migrations found")
     return head
 
 

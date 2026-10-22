@@ -1,22 +1,36 @@
 {
   "manifest_version": 3,
   "name": "Job Copilot",
-  "version": "1.0.0",
   "description": "Autofills job applications",
-  "permissions": [
-    "activeTab",
-    "storage"
-  ],
-  "host_permissions": [
-    "*://*/*",
-    "http://localhost:8000/*"
-  ],
+  "version": "1.0.0",
+  "icons": {
+    "16": "icons/job-copilot.png",
+    "32": "icons/job-copilot.png",
+    "48": "icons/job-copilot.png",
+    "128": "icons/job-copilot.png"
+  },
   "action": {
+    "default_icon": {
+      "16": "icons/job-copilot.png",
+      "32": "icons/job-copilot.png",
+      "48": "icons/job-copilot.png",
+      "128": "icons/job-copilot.png"
+    },
+    "default_title": "Job Copilot",
     "default_popup": "popup.html"
   },
-  "background": {
-    "service_worker": "background.js"
-  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "webNavigation",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "http://localhost:8765/*",
+    "http://127.0.0.1:8765/*"
+  ],
   "commands": {
     "autofill": {
       "suggested_key": {
@@ -26,18 +40,23 @@
       "description": "Autofill current page"
     }
   },
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": [
         "<all_urls>"
       ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_end",
       "css": [
-        "overlay.css"
+        "content-scripts/content.css"
       ],
       "js": [
-        "content.js"
-      ],
-      "all_frames": true
+        "content-scripts/content.js"
+      ]
     }
   ]
 }

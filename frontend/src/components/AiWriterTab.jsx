@@ -1,4 +1,5 @@
 import { useState, useContext } from 'react';
+import { requestAI } from '../api';
 import { ToastContext } from '../ToastContext';
 
 function AiWriterTab() {
@@ -73,16 +74,11 @@ function AiWriterTab() {
         if (!text) return;
         try {
             showToast('⏳ Humanizing...');
-            const resp = await fetch(`/api/humanize`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
-            const data = await resp.json();
-            setter(data.text || text);
+            const data = await requestAI('/api/humanize', { text }, 'text');
+            setter(current => current === text ? data.text : current);
             showToast('✅ Text humanized!');
         } catch (e) {
-            showToast('Humanize failed', 'error');
+            showToast(e.message || 'Humanize failed', 'error');
         }
     };
 
@@ -91,17 +87,12 @@ function AiWriterTab() {
         if (!clCompany.trim()) { showToast('Please enter the target company', 'error'); return; }
         setClLoading(true);
         try {
-            const resp = await fetch(`/api/generate-cover-letter`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+            const data = await requestAI('/api/generate-cover-letter', {
                     job_description: clJd.trim(),
                     company_name: clCompany.trim(),
                     target_product: clProduct.trim()
-                })
-            });
-            const data = await resp.json();
-            setClOutput(data.cover_letter || 'No output');
+                }, 'cover_letter');
+            setClOutput(data.cover_letter);
         } catch(e) {
             showToast('Error: ' + e.message, 'error');
         } finally {
@@ -113,13 +104,8 @@ function AiWriterTab() {
         if (!ansQ.trim()) { showToast('Please enter a question', 'error'); return; }
         setAnsLoading(true);
         try {
-            const resp = await fetch(`/api/generate-answer`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: ansQ.trim(), job_description: ansJd.trim() })
-            });
-            const data = await resp.json();
-            setAnsOutput(data.answer || 'No output');
+            const data = await requestAI('/api/generate-answer', { question: ansQ.trim(), job_description: ansJd.trim() }, 'answer');
+            setAnsOutput(data.answer);
         } catch(e) {
             showToast('Error: ' + e.message, 'error');
         } finally {
@@ -132,13 +118,8 @@ function AiWriterTab() {
         const bullets = resBullets.trim().split('\n').map(b => b.replace(/^[-*]\s*/, '').trim()).filter(b => b);
         setResLoading(true);
         try {
-            const resp = await fetch(`/api/tailor-resume`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bullets, job_description: resJd.trim() })
-            });
-            const data = await resp.json();
-            setResOutput((data.bullets || []).map(b => `- ${b}`).join('\n'));
+            const data = await requestAI('/api/tailor-resume', { bullets, job_description: resJd.trim() }, 'bullets');
+            setResOutput(data.bullets.map(b => `- ${b}`).join('\n'));
         } catch(e) {
             showToast('Error: ' + e.message, 'error');
         } finally {
@@ -150,13 +131,8 @@ function AiWriterTab() {
         if (!humInput.trim()) { showToast('Please paste text to humanize', 'error'); return; }
         setHumLoading(true);
         try {
-            const resp = await fetch(`/api/humanize`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: humInput.trim() })
-            });
-            const data = await resp.json();
-            setHumOutput(data.text || humInput.trim());
+            const data = await requestAI('/api/humanize', { text: humInput.trim() }, 'text');
+            setHumOutput(data.text);
         } catch(e) {
             showToast('Error: ' + e.message, 'error');
         } finally {
@@ -168,13 +144,8 @@ function AiWriterTab() {
         if (!intJd.trim()) { showToast('Please paste a job description', 'error'); return; }
         setIntLoading(true);
         try {
-            const resp = await fetch(`/api/interview-prep`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ job_description: intJd.trim() })
-            });
-            const data = await resp.json();
-            setIntOutput(data.prep || 'No output');
+            const data = await requestAI('/api/interview-prep', { job_description: intJd.trim() }, 'prep');
+            setIntOutput(data.prep);
         } catch(e) {
             showToast('Error: ' + e.message, 'error');
         } finally {
@@ -186,7 +157,7 @@ function AiWriterTab() {
         <div>
             <h2 style={{ marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 ✍️ AI Writer 
-                <span style={{ fontSize: '13px', fontWeight: 'normal', background: 'rgba(233,69,96,0.1)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '12px', display: 'inline-block' }}>Human-like, no AI detection</span>
+                <span style={{ fontSize: '13px', fontWeight: 'normal', background: 'rgba(233,69,96,0.1)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '12px', display: 'inline-block' }}>Drafts require factual review</span>
             </h2>
 
             {/* Cover Letter Generator */}
@@ -289,7 +260,7 @@ function AiWriterTab() {
             {/* Humanizer */}
             <div className="ai-tool-card">
                 <h3>🔄 Text Humanizer</h3>
-                <p className="ai-tool-desc">Paste any AI-generated text → remove AI markers so it sounds genuinely human</p>
+                <p className="ai-tool-desc">Rewrite text for clarity and a natural voice; review the result before use</p>
                 
                 <textarea className="ai-textarea" rows="5" placeholder="Paste robotic-sounding text to humanize..." value={humInput} onChange={e => setHumInput(e.target.value)}></textarea>
                 

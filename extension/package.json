@@ -1,0 +1,26 @@
+{
+  "name": "job-copilot-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-first job application assistant",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "prepare": "wxt prepare",
+    "typecheck": "tsc --noEmit",
+    "build": "wxt build",
+    "build:unpacked": "npm run build && node scripts/sync-unpacked.mjs",
+    "test:build": "node --import tsx --test tests/test_build.js",
+    "test": "node --import tsx tests/test_dom_extraction.js && node --import tsx --test tests/test_frame_lifecycle.js tests/test_dom_values.js tests/test_adapters.js tests/test_api_proxy.js tests/test_autofill.js tests/test_ats_adapters.js tests/test_ats_lifecycle.js tests/test_site_access.js tests/test_backend_connection.js tests/test_resume_upload.js",
+    "test:resume-browser": "node tests/test_resume_browser.cjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.0",
+    "linkedom": "0.18.13",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "wxt": "0.21.4"
+  }
+}

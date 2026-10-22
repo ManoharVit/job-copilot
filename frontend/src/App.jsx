@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import jobCopilotLogo from './assets/job-copilot-logo.png';
 import DashboardTab from './components/DashboardTab';
 import ProfileTab from './components/ProfileTab';
 import ApplicationsTab from './components/ApplicationsTab';
@@ -17,7 +18,10 @@ function App() {
     return (
         <ToastContext.Provider value={showToast}>
             <div className="sidebar">
-                <div className="logo">Job Copilot</div>
+                <div className="logo">
+                    <img className="brand-mark" src={jobCopilotLogo} width="40" height="40" alt="" aria-hidden="true" />
+                    <span>Job Copilot</span>
+                </div>
                 <div className="nav-links">
                     <div 
                         className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} 

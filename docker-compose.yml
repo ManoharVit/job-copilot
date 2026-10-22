@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: jobcopilot
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,7 +25,7 @@ services:
       - PYTHONPATH=/app/backend
     command: bash -c "pip install -r requirements.txt && cd backend && alembic upgrade head && uvicorn server:app --host 0.0.0.0 --port 8000 --reload"
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8765:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -37,9 +37,9 @@ services:
       - ./frontend:/app/frontend
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     ports:
-      - "5173:5173"
+      - "127.0.0.1:5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://127.0.0.1:8765
     depends_on:
       - backend
 

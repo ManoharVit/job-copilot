@@ -18,6 +18,7 @@ from pathlib import Path
 # --- isolation: must run before any app module is imported ------------------
 os.environ["GEMINI_API_KEY"] = ""  # ai_writer uses setdefault, so .env cannot override this
 _SESSION_DIR = Path(tempfile.mkdtemp(prefix="jobcopilot-tests-"))
+os.environ["RESUME_PATH"] = str(_SESSION_DIR / "resume.json")
 os.environ["DATABASE_URL"] = f"sqlite:///{_SESSION_DIR / 'import-time.db'}"
 
 import pytest  # noqa: E402
@@ -133,6 +134,6 @@ def client(session_factory, acting_as):
     server.app.dependency_overrides[get_current_user] = lambda: acting_as.user
     # Not used as a context manager: the startup schema guard targets the
     # import-time engine and is tested separately in test_migrations.py.
-    test_client = TestClient(server.app, raise_server_exceptions=False)
+    test_client = TestClient(server.app, base_url="http://127.0.0.1:8765", raise_server_exceptions=False)
     yield test_client
     server.app.dependency_overrides.clear()

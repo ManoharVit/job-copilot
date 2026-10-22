@@ -25,7 +25,7 @@ Closes #<!-- Issue number, e.g. Closes #123 -->
 <!-- Describe the testing executed to verify these changes: -->
 - [ ] Ran backend test suite: `PYTHONPATH=backend python -m pytest backend/tests/ -v`
 - [ ] Ran backend linter: `ruff check backend/`
-- [ ] Verified local server execution on `http://127.0.0.1:8000` (`./start.sh`)
+- [ ] Verified local server execution on `http://127.0.0.1:8765` (`./start.sh`)
 - [ ] Frontend changes: Verified `base: '/static/'` in `frontend/vite.config.js` and confirmed `/static/assets/` routing (per `GEMINI.md` and `docs/development.md`)
 - [ ] Added new unit/integration tests for introduced functionality or bug fixes
 

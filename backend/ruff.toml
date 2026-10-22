@@ -13,3 +13,8 @@ ignore = [
     "F401",  # unused `random` import in ai_writer.py
     "E701",  # one-line `if hour == 0: hour = 12` in server.py
 ]
+
+[lint.per-file-ignores]
+# Historical migration: CANONICAL is a fixed module tuple, never request input.
+# Preserve already-applied migration code; review this exception if it changes.
+"migrations/versions/0002_application_tracker.py" = ["S608"]

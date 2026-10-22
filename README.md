@@ -53,6 +53,17 @@ Job Copilot is an AI-assisted career platform designed to help job seekers disco
    cd backend && alembic upgrade head
    ```
 
+## Chrome extension development
+
+The extension now uses WXT and TypeScript. From `extension/`, run `npm ci`,
+`npm run typecheck`, `npm test`, and `npm run build:unpacked`. Keep loading the
+existing `extension/` directory in Chrome, then reload the extension and job
+page after a build. This keeps the unpacked extension ID used by the backend
+CORS configuration.
+
+See [extension development and testing](extension/README.md) for the source
+layout, generated assets, and remaining browser integration checks.
+
 ## Architecture
 
 Job Copilot runs entirely on your machine: a FastAPI backend with a local SQLite database
@@ -89,7 +100,6 @@ flowchart TD
 
     GEMINI(["Google Gemini API<br/>only if GEMINI_API_KEY is set"])
 
-    UI --> V1
     UI --> LEGACY
     UI --> AIR
     EXT --> LEGACY
@@ -118,6 +128,36 @@ flowchart TD
 
 Further reading:
 
-- [API reference with curl examples](docs/api.md), or interactive docs at `http://127.0.0.1:8000/docs` while the server runs
+- [API reference with curl examples](docs/api.md), or interactive docs at `http://127.0.0.1:8765/docs` while the server runs
 - [Application Tracker design](docs/modules/application-tracker.md)
 - [Development notes](docs/development.md) and [Contributing guide](CONTRIBUTING.md)
+
+## Code review and current limits
+
+See the [15 October 2026 code review](docs/review-2026-10-15.md) for applied
+security/data-integrity corrections, verification, and remaining release work.
+The currently served dashboard is `backend/static/index.html`; React builds into
+`backend/static_staging` and is not promoted by `start.sh`. Browser integration
+testing remains deferred. Unknown/eligibility fields require manual answers.
+
+## Automatic resume attachment
+
+Open **Profile → Resume for Autofill** in the dashboard, choose a PDF or DOCX
+(up to 5 MB), and click **Save resume**. On a job application, click Autofill to
+fill fields and attach that saved resume to a clearly identified supported upload
+field. Review the portal's attachment confirmation before submitting.
+
+The resume is stored locally in `data/resume.json` with private file permissions.
+It is sent to the job portal only when you invoke Autofill and the portal's file
+handler uploads it; it is not sent to Gemini. Existing application attachments
+are preserved. Ambiguous/incompatible fields require manual attachment.
+
+## Engineering and release checks
+
+See [engineering workflow and security boundaries](docs/engineering.md) and the
+[hardening acceptance criteria](docs/specs/engineering-hardening.md). CI includes
+security lint, dependency audits, tracked-file privacy checks and regression tests.
+Live browser/ATS behavior requires the separate pilot checks documented there.
+
+See the [22 October hardening review](docs/review-2026-10-22.md) for applied fixes,
+verification results and explicitly outstanding work.

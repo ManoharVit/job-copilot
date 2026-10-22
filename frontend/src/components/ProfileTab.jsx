@@ -1,4 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
+import { requestJSON } from '../api';
+import ResumeCard from './ResumeCard';
 import { ToastContext } from '../ToastContext';
 
 function ProfileTab() {
@@ -19,8 +21,7 @@ function ProfileTab() {
 
     const loadProfile = async () => {
         try {
-            const res = await fetch('/api/profile');
-            const data = await res.json();
+            const data = await requestJSON('/api/profile');
             
             let skills = data.skills || [];
             if (typeof skills === 'string') {
@@ -93,6 +94,7 @@ function ProfileTab() {
                 <button onClick={saveProfile}>Save Changes</button>
             </div>
 
+            <ResumeCard />
             <form onSubmit={e => e.preventDefault()}>
                 <div className="form-section">
                     <h3>Personal Info</h3>

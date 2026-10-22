@@ -16,7 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -31,6 +32,9 @@ jobs:
             requirements.txt
             requirements-dev.txt
 
+      - name: Check tracked files for private data and recognizable secrets
+        run: python scripts/check_repository.py
+
       # Both files are hash-locked; ruff is pinned in requirements-dev.txt.
       - name: Install dependencies
         run: |
@@ -43,4 +47,67 @@ jobs:
 
       - name: Lint with Ruff
         run: |
-          ruff check backend/
+          ruff check backend/ scripts/
+          ruff check backend/ --select S --exclude tests
+
+      - name: Audit locked Python runtime dependencies
+        run: python -m pip_audit -r requirements.txt --require-hashes --disable-pip --progress-spinner off
+
+  test-extension:
+    name: Extension Types, Tests and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install locked extension dependencies
+        run: npm ci
+
+      - name: Audit extension dependencies
+        run: npm audit --audit-level=high
+
+      - name: Check TypeScript
+        run: npm run typecheck
+
+      - name: Run extension regression tests
+        run: npm test
+
+      - name: Build production extension
+        run: npm run build
+
+      - name: Check packaged manifest and runtime
+        run: npm run test:build
+
+  test-dashboard:
+    name: Dashboard Contracts and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+      - run: python ../scripts/check_dashboard.py ../backend/static

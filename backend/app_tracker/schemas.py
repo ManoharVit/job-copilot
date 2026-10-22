@@ -30,7 +30,7 @@ def _ensure_utc(value: dt.datetime) -> dt.datetime:
 UtcDatetime = Annotated[dt.datetime, AfterValidator(_ensure_utc)]
 
 
-def _validate_url(value: str) -> str:
+def validate_application_url(value: str) -> str:
     if value == "":
         return value
     parts = urlsplit(value)
@@ -59,7 +59,7 @@ class ApplicationCreate(BaseModel):
 
     title: str = Field(min_length=1, max_length=MAX_TITLE)
     company: str = Field(min_length=1, max_length=MAX_COMPANY)
-    url: Annotated[str, AfterValidator(_validate_url)] = Field(default="", max_length=MAX_URL)
+    url: Annotated[str, AfterValidator(validate_application_url)] = Field(default="", max_length=MAX_URL)
     platform: str = Field(default="other", min_length=1, max_length=MAX_PLATFORM)
     status: ApplicationStatus = Field(
         default=ApplicationStatus.DRAFT,
@@ -101,7 +101,7 @@ class ApplicationUpdate(BaseModel):
 
     title: str | None = Field(default=None, min_length=1, max_length=MAX_TITLE)
     company: str | None = Field(default=None, min_length=1, max_length=MAX_COMPANY)
-    url: Annotated[str, AfterValidator(_validate_url)] | None = Field(default=None, max_length=MAX_URL)
+    url: Annotated[str, AfterValidator(validate_application_url)] | None = Field(default=None, max_length=MAX_URL)
     platform: str | None = Field(default=None, min_length=1, max_length=MAX_PLATFORM)
     notes: str | None = Field(default=None, max_length=MAX_NOTES)
     job_description: str | None = Field(default=None, max_length=MAX_JOB_DESCRIPTION)

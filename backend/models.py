@@ -66,8 +66,10 @@ class Profile(Base):
     education_level = Column(String, default="")
     graduation_year = Column(Integer, default=0)
     gpa = Column(String, default="")
+    education_records = Column(Text, default="[]") # JSON list of degree dicts
     
     skills = Column(Text, default="[]") # JSON list
+    certifications = Column(Text, default="[]") # JSON list of dicts
     
     expected_ctc = Column(String, default="")
     current_ctc = Column(String, default="")

@@ -22,7 +22,6 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import (
     http_exception_handler,
-    request_validation_exception_handler,
 )
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -108,7 +107,7 @@ async def _handle_validation_error(request: Request, exc: RequestValidationError
         return error_envelope(
             request, 422, "validation_error", "Request validation failed.", _safe_validation_details(exc)
         )
-    return await request_validation_exception_handler(request, exc)
+    return JSONResponse(status_code=422, content={"detail": _safe_validation_details(exc)})
 
 
 async def _handle_http_exception(request: Request, exc: StarletteHTTPException):

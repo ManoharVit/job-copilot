@@ -3,9 +3,9 @@
 Job Copilot exposes a local HTTP API (FastAPI). The full, always-current schema is generated
 from the code. With the server running:
 
-- Interactive docs (Swagger UI): <http://127.0.0.1:8000/docs>
-- ReDoc: <http://127.0.0.1:8000/redoc>
-- Raw OpenAPI schema: <http://127.0.0.1:8000/openapi.json>
+- Interactive docs (Swagger UI): <http://127.0.0.1:8765/docs>
+- ReDoc: <http://127.0.0.1:8765/redoc>
+- Raw OpenAPI schema: <http://127.0.0.1:8765/openapi.json>
 
 Every endpoint in the schema has a summary, a tag and (where it takes a body) a request
 example. `backend/tests/test_openapi_docs.py` runs those examples against the API, so they
@@ -18,7 +18,7 @@ should stay correct.
 The examples below assume the server is running (`./start.sh`) and use:
 
 ```bash
-BASE=http://127.0.0.1:8000
+BASE=http://127.0.0.1:8765
 ```
 
 Endpoint groups:

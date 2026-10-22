@@ -6,13 +6,13 @@ export default defineConfig({
   base: '/static/',
   plugins: [react()],
   build: {
-    outDir: '../backend/static_staging',
-    emptyOutDir: true,
+    outDir: '../backend/static',
+    emptyOutDir: false,
   },
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8765',
         changeOrigin: true,
       }
     }

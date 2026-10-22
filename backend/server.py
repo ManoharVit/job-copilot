@@ -3,19 +3,27 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from security import OriginGuardMiddleware, LocalAPIMiddleware
+from writer_schemas import (CoverLetterRequest, AnswerRequest, TailorRequest, HumanizeRequest,
+                            InterviewRequest, ExportRequest)
+from pydantic import ValidationError
+from matching_schemas import MATCH_PAYLOAD, MatchEnvelope
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 
 from database import engine, get_db
 import models  # noqa: F401  (registers ORM tables)
 import profile_manager
 import tracker
-from field_matcher import match_fields
+from field_matcher import match_fields, requires_manual_review
 from api_errors import RequestIDMiddleware, register_error_handlers
 from identity import CurrentUser, get_current_user
 from schema_guard import assert_schema_current
+from resume_routes import router as resume_router
 from app_tracker.router import router as applications_router
+from app_tracker.schemas import validate_application_url
 
 
 @asynccontextmanager
@@ -37,6 +45,7 @@ allowed_origins = [origin.strip() for origin in settings.cors_origins.split(",")
 if settings.cors_extension_origin:
     allowed_origins.append(settings.cors_extension_origin.strip())
 
+app.add_middleware(LocalAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -45,9 +54,13 @@ app.add_middleware(
     allow_headers=["Content-Type"],
     max_age=600,
 )
+app.add_middleware(OriginGuardMiddleware, allowed_origins=allowed_origins)
+# Reject a rebound DNS hostname even if the TCP connection reaches loopback.
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
 app.add_middleware(RequestIDMiddleware)
 register_error_handlers(app)
 app.include_router(applications_router)
+app.include_router(resume_router)
 
 # OpenAPI request examples for the legacy (untyped dict-body) endpoints. Documentation only:
 # they do not change validation. Typed v1 endpoints carry examples on their schemas instead.
@@ -89,9 +102,25 @@ _LEGACY = "legacy (v0)"
 
 
 # API Endpoints
+@app.get("/api/health", tags=["system"], summary="Identify the running local Job Copilot service")
+def api_health():
+    # No profile, key, database path, or other private information is exposed.
+    return {"service": "job-copilot", "status": "ok"}
+
+
 @app.post("/api/match-fields", tags=["extension"], summary="Suggest profile values for form fields")
-def api_match_fields(fields: List[Dict[str, Any]] = Body(..., openapi_examples=_EX_MATCH_FIELDS),
+def api_match_fields(payload: Union[List[Dict[str, Any]], Dict[str, Any]] = Body(..., openapi_examples=_EX_MATCH_FIELDS),
                      db: Session = Depends(get_db)):
+    try:
+        parsed = MATCH_PAYLOAD.validate_python(payload)
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail="Invalid form field payload") from exc
+    pref = parsed.degree_preference if isinstance(parsed, MatchEnvelope) else None
+    records = parsed.fields if isinstance(parsed, MatchEnvelope) else parsed
+    fields = [field.model_dump(exclude_unset=True) for field in records]
+    for field in fields:
+        if pref and not field.get("degree_preference"):
+            field["degree_preference"] = pref
     profile = profile_manager.get_profile(db)
     matches = match_fields(fields, profile)
     return matches
@@ -101,10 +130,14 @@ def api_match_fields(fields: List[Dict[str, Any]] = Body(..., openapi_examples=_
 def api_log_application(data: Dict[str, Any] = Body(..., openapi_examples=_EX_LOG_APPLICATION),
                         db: Session = Depends(get_db),
                         user: CurrentUser = Depends(get_current_user)):
+    try:
+        url = validate_application_url(str(data.get("url", "")))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="url must be an absolute http(s) URL") from exc
     application = tracker.log_application(
         db,
         user.id,
-        url=str(data.get("url", ""))[:2048],
+        url=url[:2048],
         title=str(data.get("title", ""))[:300],
         company=str(data.get("company", ""))[:300],
         platform=str(data.get("platform", "other"))[:50],
@@ -118,7 +151,10 @@ def api_get_profile(db: Session = Depends(get_db)):
 
 @app.put("/api/profile", tags=["profile"], summary="Update profile fields (only keys present are changed)")
 def api_update_profile(data: Dict[str, Any] = Body(..., openapi_examples=_EX_PROFILE), db: Session = Depends(get_db)):
-    return profile_manager.update_profile(db, data)
+    try:
+        return profile_manager.update_profile(db, data)
+    except profile_manager.ProfileValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 @app.get("/api/stats", tags=[_LEGACY], summary="Dashboard counters")
 def api_get_stats(db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
@@ -184,54 +220,64 @@ _EX_EXPORT_DOC = {
         "text": "Some text", "format": "tex", "doc_type": "Document"}},
 }
 
+def _generated(value):
+    # Preserve client drafts when generation fails; never disguise fallback input
+    # or provider errors as a successful generated document.
+    if not value or (isinstance(value, str) and value.startswith("[Error")):
+        raise HTTPException(status_code=503, detail="AI generation unavailable. Check the local API key/model configuration and retry; your draft was not changed.")
+    return value
+
+
 @app.post("/api/generate-cover-letter", tags=[_AI], summary="Generate a cover letter")
-def api_generate_cover_letter(data: Dict[str, Any] = Body(..., openapi_examples=_EX_COVER), db: Session = Depends(get_db)):
-    job_description = data.get("job_description", "")
-    company_name = data.get("company_name", "")
-    target_product = data.get("target_product", "")
+def api_generate_cover_letter(data: CoverLetterRequest = Body(..., openapi_examples=_EX_COVER), db: Session = Depends(get_db)):
+    job_description = data.job_description
+    company_name = data.company_name
+    target_product = data.target_product
     
-    if not job_description:
+    if not job_description.strip():
         raise HTTPException(status_code=400, detail="job_description required")
     profile = profile_manager.get_profile(db)
     text = ai_writer.generate_cover_letter(job_description, profile, company_name, target_product)
-    return {"cover_letter": text}
+    return {"cover_letter": _generated(text)}
 
 @app.post("/api/generate-answer", tags=[_AI], summary="Answer an application question")
-def api_generate_answer(data: Dict[str, Any] = Body(..., openapi_examples=_EX_ANSWER), db: Session = Depends(get_db)):
-    question = data.get("question", "")
-    job_description = data.get("job_description", "")
-    if not question:
+def api_generate_answer(data: AnswerRequest = Body(..., openapi_examples=_EX_ANSWER), db: Session = Depends(get_db)):
+    question = data.question
+    job_description = data.job_description
+    if not isinstance(question, str) or not question.strip():
         raise HTTPException(status_code=400, detail="question required")
+    if requires_manual_review(question):
+        raise HTTPException(status_code=422, detail="Eligibility and consent questions require a manual answer")
     profile = profile_manager.get_profile(db)
     text = ai_writer.generate_answer(question, profile, job_description)
-    return {"answer": text}
+    return {"answer": _generated(text)}
 
 @app.post("/api/tailor-resume", tags=[_AI], summary="Tailor resume bullets to a job description")
-def api_tailor_resume(data: Dict[str, Any] = Body(..., openapi_examples=_EX_TAILOR), db: Session = Depends(get_db)):
-    bullets = data.get("bullets", [])
-    job_description = data.get("job_description", "")
-    if not bullets or not job_description:
+def api_tailor_resume(data: TailorRequest = Body(..., openapi_examples=_EX_TAILOR), db: Session = Depends(get_db)):
+    bullets = data.bullets
+    job_description = data.job_description
+    if not bullets or not job_description.strip():
         raise HTTPException(status_code=400, detail="bullets and job_description required")
     profile = profile_manager.get_profile(db)
     result = ai_writer.tailor_resume_bullets(bullets, job_description, profile)
-    return {"bullets": result}
+    return {"bullets": _generated(result)}
 
 @app.post("/api/humanize", tags=[_AI], summary="Rewrite text in a more natural voice")
-def api_humanize(data: Dict[str, str] = Body(..., openapi_examples=_EX_HUMANIZE)):
-    text = data.get("text", "")
-    if not text:
+def api_humanize(data: HumanizeRequest = Body(..., openapi_examples=_EX_HUMANIZE)):
+    text = data.text
+    if not text.strip():
         raise HTTPException(status_code=400, detail="text required")
     result = ai_writer.humanize_text(text)
-    return {"text": result}
+    return {"text": _generated(result)}
 
 @app.post("/api/interview-prep", tags=[_AI], summary="Generate interview preparation notes")
-def api_interview_prep(data: Dict[str, Any] = Body(..., openapi_examples=_EX_PREP), db: Session = Depends(get_db)):
-    job_description = data.get("job_description", "")
-    if not job_description:
+def api_interview_prep(data: InterviewRequest = Body(..., openapi_examples=_EX_PREP), db: Session = Depends(get_db)):
+    job_description = data.job_description
+    if not job_description.strip():
         raise HTTPException(status_code=400, detail="job_description required")
     profile = profile_manager.get_profile(db)
     result = ai_writer.generate_interview_prep(job_description, profile)
-    return {"prep": result}
+    return {"prep": _generated(result)}
 
 # --- Export Endpoints ---
 
@@ -291,10 +337,10 @@ import io
 
 
 @app.post("/api/export-doc", tags=["documents"], summary="Export text as PDF, DOCX or LaTeX (format: pdf | docx | tex)")
-def api_export_document(data: Dict[str, Any] = Body(..., openapi_examples=_EX_EXPORT_DOC), db: Session = Depends(get_db)):
-    text = data.get("text", "")
-    fmt = data.get("format", "tex")
-    doc_type = data.get("doc_type", "Document")
+def api_export_document(data: ExportRequest = Body(..., openapi_examples=_EX_EXPORT_DOC), db: Session = Depends(get_db)):
+    text = data.text
+    fmt = data.format
+    doc_type = data.doc_type
     
     # 1. Fix Unicode Characters (smart quotes, dashes) that break basic fonts
     text = text.replace('’', "'").replace('‘', "'")
@@ -310,7 +356,10 @@ def api_export_document(data: Dict[str, Any] = Body(..., openapi_examples=_EX_EX
     
     # Generate filename
     dt_str = get_word_datetime()
-    safe_type = doc_type.replace(" ", "_")
+    # Header filenames are ASCII tokens; profile/document text stays in the file.
+    import re
+    first_name = re.sub(r"[^A-Za-z0-9_-]", "_", first_name)[:80] or "Applicant"
+    safe_type = re.sub(r"[^A-Za-z0-9_-]", "_", doc_type)[:80] or "Document"
     filename = f"{first_name}_{safe_type}_{dt_str}.{fmt}"
     
     # 2. Add Professional Header if it's a Cover Letter
@@ -338,14 +387,17 @@ def api_export_document(data: Dict[str, Any] = Body(..., openapi_examples=_EX_EX
         tex_content = "\\documentclass{article}\n\\begin{document}\n" 
         for paragraph in text.split('\n'):
             if paragraph.strip():
-                p = paragraph.replace('\\', '\\\\').replace('%', '\\%').replace('$', '\\$').replace('_', '\\_').replace('#', '\\#')
+                escapes = {"\\": r"\textbackslash{}", "{": r"\{", "}": r"\}", "&": r"\&",
+                           "%": r"\%", "$": r"\$", "_": r"\_", "#": r"\#",
+                           "^": r"\textasciicircum{}", "~": r"\textasciitilde{}"}
+                p = "".join(escapes.get(char, char) for char in paragraph)
                 tex_content += p + "\n\n"
         tex_content += "\\end{document}"
         
         return StreamingResponse(
             io.StringIO(tex_content),
             media_type="application/x-tex",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
         
     elif fmt == "docx":
@@ -363,7 +415,7 @@ def api_export_document(data: Dict[str, Any] = Body(..., openapi_examples=_EX_EX
         return StreamingResponse(
             bio,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
         
     elif fmt == "pdf":
@@ -391,14 +443,14 @@ def api_export_document(data: Dict[str, Any] = Body(..., openapi_examples=_EX_EX
                     pdf.cell(0, 5, paragraph.strip(), align='C', ln=True)
                 else:
                     pdf.set_font("helvetica", size=11)
-                    pdf.multi_cell(0, 6, paragraph.strip(), markdown=True)
+                    pdf.multi_cell(0, 6, paragraph.strip(), markdown=False)
                     pdf.ln(3)
         
         pdf_bytes = pdf.output()
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
     
     raise HTTPException(status_code=400, detail="Invalid format")
@@ -416,4 +468,12 @@ def serve_dashboard():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {"message": "Dashboard not found"}
+
+
+@app.get("/legacy", include_in_schema=False)
+def serve_legacy_dashboard():
+    legacy_path = os.path.join(static_dir, "legacy.html")
+    if os.path.exists(legacy_path):
+        return FileResponse(legacy_path)
+    return {"message": "Legacy dashboard not found"}
 

@@ -34,7 +34,7 @@ def test_cors_configured_extension_origin(monkeypatch):
     import server
     importlib.reload(server)
     
-    test_client = TestClient(server.app)
+    test_client = TestClient(server.app, base_url="http://127.0.0.1:8765")
     response = test_client.options(
         "/api/match-fields",
         headers={

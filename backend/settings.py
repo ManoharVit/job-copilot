@@ -27,13 +27,16 @@ class Settings(BaseSettings):
     # current installs keep working without any configuration change.
     database_url: str = f"sqlite:///{DEFAULT_SQLITE_PATH}"
 
+    # Private resume storage is separate from profile fields and AI prompts.
+    resume_path: Path = PROJECT_ROOT / "data" / "resume.json"
+
     # Identity mode. Only "local" exists today: every request acts as the
     # single bootstrap local user. Real authentication is not implemented yet,
     # so the server must stay bound to 127.0.0.1.
     auth_mode: Literal["local"] = "local"
 
     # CORS configuration
-    cors_origins: str = "http://127.0.0.1:8000,http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = "http://localhost:8765,http://127.0.0.1:8765,http://localhost:5173,http://127.0.0.1:5173"
     cors_extension_origin: str | None = None
 
 

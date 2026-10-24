@@ -1,3 +1,4 @@
+import { isRadio, radioQuestion } from './radio';
 import { getAdapterFieldContext } from '../adapters';
 import type { EditableField } from '../shared/messages';
 
@@ -240,6 +241,7 @@ export function getQuestionForTextarea(ta: HTMLTextAreaElement | null) {
 
 export function getFieldContext(field: EditableField | null) {
     if (!field) return '';
+    if (isRadio(field)) return radioQuestion(field);
     const document = field.ownerDocument || globalThis.document;
     const adapterLabel = getAdapterFieldContext(field);
     if (adapterLabel) return cleanQuestionText(adapterLabel);

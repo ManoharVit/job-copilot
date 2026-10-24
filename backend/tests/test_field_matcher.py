@@ -270,8 +270,10 @@ def test_api_match_fields_dict_payload(client):
 
 def test_dover_compensation_matching_text_and_number():
     profile = {
-        "current_ctc": "11.5 LPA",
-        "expected_ctc": "15 LPA",
+        "current_ctc": "12 LPA",
+        "current_fixed_ctc": "9 LPA",
+        "expected_fixed_ctc": "14 LPA",
+        "expected_ctc": "18 LPA",
     }
 
     # Dover fields with type='number'
@@ -280,8 +282,8 @@ def test_dover_compensation_matching_text_and_number():
         {"index": 1, "label": "Expected annual fixed compensation (Rs LPA) *", "type": "number"},
     ]
     res_num = match_fields(number_fields, profile)
-    assert res_num[0] == "11.5"
-    assert res_num[1] == "15"
+    assert res_num[0] == "9"
+    assert res_num[1] == "14"
 
     # Dover fields with type='text'
     text_fields = [
@@ -289,14 +291,16 @@ def test_dover_compensation_matching_text_and_number():
         {"index": 1, "label": "Expected annual fixed compensation (Rs LPA) *", "type": "text"},
     ]
     res_text = match_fields(text_fields, profile)
-    assert res_text[0] == "11.5 LPA"
-    assert res_text[1] == "15 LPA"
+    assert res_text[0] == "9 LPA"
+    assert res_text[1] == "14 LPA"
 
 
 def test_compensation_variations_and_input_types():
     profile = {
-        "current_ctc": "11.5 LPA",
-        "expected_ctc": "15 LPA",
+        "current_ctc": "12 LPA",
+        "current_fixed_ctc": "9 LPA",
+        "expected_fixed_ctc": "14 LPA",
+        "expected_ctc": "18 LPA",
     }
 
     fields = [
@@ -313,22 +317,24 @@ def test_compensation_variations_and_input_types():
     ]
 
     res = match_fields(fields, profile)
-    assert res[0] == "11.5"
-    assert res[1] == "11.5 LPA"
-    assert res[2] == "11.5"
-    assert res[3] == "15 LPA"
-    assert res[4] == "11.5"
-    assert res[5] == "15 LPA"
-    assert res[6] == "11.5 LPA"
-    assert res[7] == "15"
-    assert res[8] == "11.5 LPA"
-    assert res[9] == "15 LPA"
+    assert res[0] == "9"
+    assert res[1] == "9 LPA"
+    assert res[2] == "12"
+    assert res[3] == "18 LPA"
+    assert res[4] == "12"
+    assert res[5] == "18 LPA"
+    assert res[6] == "12 LPA"
+    assert res[7] == "18"
+    assert res[8] == "12 LPA"
+    assert res[9] == "14 LPA"
 
 
 def test_bare_numeric_profile_ctc():
     profile = {
-        "current_ctc": "11.5",
-        "expected_ctc": "15",
+        "current_ctc": "12",
+        "current_fixed_ctc": "9",
+        "expected_fixed_ctc": "14",
+        "expected_ctc": "18",
     }
 
     fields = [
@@ -345,20 +351,22 @@ def test_bare_numeric_profile_ctc():
     ]
 
     res = match_fields(fields, profile)
-    assert res[0] == "11.5"
-    assert res[1] == "15"
-    assert res[2] == "11.5 LPA"
-    assert res[3] == "15 LPA"
-    assert res[4] == "11.5 LPA"
-    assert res[5] == "15 LPA"
-    assert res[6] == "11.5 LPA"
-    assert res[7] == "15 LPA"
-    assert res[8] == "11.5"
-    assert res[9] == "15"
+    assert res[0] == "9"
+    assert res[1] == "14"
+    assert res[2] == "9 LPA"
+    assert res[3] == "14 LPA"
+    assert res[4] == "12 LPA"
+    assert res[5] == "18 LPA"
+    assert res[6] == "12 LPA"
+    assert res[7] == "18 LPA"
+    assert res[8] == "12"
+    assert res[9] == "18"
 
 
 def test_api_match_fields_compensation(client):
-    client.put("/api/profile", json={"current_ctc": "11.5 LPA", "expected_ctc": "15 LPA"})
+    client.put("/api/profile", json={"current_ctc": "12 LPA",
+        "current_fixed_ctc": "9 LPA",
+        "expected_fixed_ctc": "14 LPA", "expected_ctc": "18 LPA"})
 
     payload = [
         {"index": 0, "label": "Current annual fixed compensation (Rs LPA) *", "type": "number"},
@@ -370,32 +378,34 @@ def test_api_match_fields_compensation(client):
     response = client.post("/api/match-fields", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert data.get("0") == "11.5"
-    assert data.get("1") == "15"
-    assert data.get("2") == "11.5 LPA"
-    assert data.get("3") == "15 LPA"
+    assert data.get("0") == "9"
+    assert data.get("1") == "14"
+    assert data.get("2") == "9 LPA"
+    assert data.get("3") == "14 LPA"
 
 
 def test_compensation_field_types_and_exclusions():
     profile = {
-        "current_ctc": "11.5 LPA",
-        "expected_ctc": "15 LPA",
+        "current_ctc": "12 LPA",
+        "current_fixed_ctc": "9 LPA",
+        "expected_fixed_ctc": "14 LPA",
+        "expected_ctc": "18 LPA",
     }
 
     fields = [
         {"index": 0, "label": "Current annual fixed compensation", "type": "numeric"},
         {"index": 1, "label": "Expected annual fixed compensation", "type": "decimal"},
-        {"index": 2, "label": "Current CTC", "type": "select", "options": ["10 LPA", "11.5 LPA", "15 LPA"]},
-        {"index": 3, "label": "Expected CTC", "type": "select", "options": ["10 LPA", "12 LPA", "15 LPA"]},
+        {"index": 2, "label": "Current CTC", "type": "select", "options": ["10 LPA", "12 LPA", "18 LPA"]},
+        {"index": 3, "label": "Expected CTC", "type": "select", "options": ["10 LPA", "12 LPA", "18 LPA"]},
         {"index": 4, "label": "Workers Compensation Claim"},
         {"index": 5, "label": "Equity Compensation"},
     ]
 
     res = match_fields(fields, profile)
-    assert res[0] == "11.5"
-    assert res[1] == "15"
-    assert res[2] == "11.5 LPA"
-    assert res[3] == "15 LPA"
+    assert res[0] == "9"
+    assert res[1] == "14"
+    assert res[2] == "12 LPA"
+    assert res[3] == "18 LPA"
     assert 4 not in res or res[4] is None
     assert 5 not in res or res[5] is None
 

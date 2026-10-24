@@ -10,6 +10,7 @@ from threading import BoundedSemaphore
 from google import genai
 from google.genai import types
 from field_matcher import requires_manual_review
+from compensation import compensation_answer, compensation_context
 
 logger = logging.getLogger("job_copilot.ai")
 
@@ -237,6 +238,11 @@ def generate_answer(question: str, profile: dict, job_description: str = "") -> 
     if requires_manual_review(question):
         return "[Error] Eligibility and consent questions require a manual answer."
 
+    # Saved compensation is factual data; no model or API key is needed.
+    compensation = compensation_answer(question, profile)
+    if compensation is not None:
+        return compensation
+
     if not AI_AVAILABLE:
         return _fallback_answer(question, profile)
     
@@ -274,6 +280,7 @@ Location: {location}
 Education: {edu_str}
 Top Skills: {', '.join(skills[:15])}
 Engineering Background & Projects: {bio}
+{compensation_context(question, profile)}
 
 QUESTION TO ANSWER:
 "{question}"

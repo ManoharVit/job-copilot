@@ -31,6 +31,8 @@ class Certification(BaseModel):
 
 
 _JSON_TYPES = {
+    'skill_experience': TypeAdapter(dict[Annotated[str, Field(min_length=1, max_length=200)],
+                                             Annotated[float, Field(strict=True, ge=0, le=100)]]),
     'skills': TypeAdapter(list[Annotated[str, Field(min_length=1, max_length=200)]]),
     'education_records': TypeAdapter(list[Education]),
     'certifications': TypeAdapter(list[Certification]),
@@ -55,11 +57,12 @@ def validate_update(data: dict, defaults: dict) -> dict:
                     if len(value) > 200_000:
                         raise ValueError('JSON too large')
                     value = json.loads(value)
-                if not isinstance(value, list) or len(value) > 500:
-                    raise ValueError('Expected a bounded list')
+                if not isinstance(value, dict if key == 'skill_experience' else list) or len(value) > 500:
+                    raise ValueError('Expected a bounded collection')
                 items = _JSON_TYPES[key].validate_python(value, strict=True)
-                value = json.dumps([item.model_dump(exclude_unset=True) if isinstance(item, BaseModel) else item
-                                    for item in items], allow_nan=False)
+                value = json.dumps(items if isinstance(items, dict) else [
+                    item.model_dump(exclude_unset=True) if isinstance(item, BaseModel) else item
+                    for item in items], allow_nan=False)
                 if len(value) > 200_000:
                     raise ValueError('JSON too large')
             elif isinstance(defaults[key], bool):

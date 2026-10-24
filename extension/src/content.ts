@@ -9,6 +9,7 @@ import {
 import { attachSavedResume, captureResumeTarget } from './core/resume-upload';
 import type { SavedResume } from './core/resume-upload';
 import { autofillFailureMessage } from './core/site-access';
+import { isRadio, radioMembers } from './core/radio';
 import { canEdit, captureTarget, targetUnchanged, applyMapping } from './core/autofill';
 import type { FieldTarget } from './core/autofill';
 import { getFieldLimit, setNativeValue } from './core/dom';
@@ -70,6 +71,8 @@ export function startContentScript() {
 
     formFields = inputs.filter(input => {
       if (!canEdit(input)) return false;
+      // One request per question, carrying every option label in its group.
+      if (isRadio(input) && radioMembers(input).find(canEdit) !== input) return false;
       const tag = input.tagName.toLowerCase();
       if (tag === 'input' && skipTypes.includes(input.type.toLowerCase())) {
         return false;
@@ -567,19 +570,11 @@ export function startContentScript() {
         return text.includes('cert') || text.includes('issuer');
       });
 
-      if (filledCount > 0) {
-        showNotification(`Filled ${filledCount}, Correct ${alreadyCorrectCount}, Skipped ${skippedCount}${resumeMessage ? ' · ' + resumeMessage : ''}`, resumeFailedCount ? 'error' : false);
-      } else if (resumeMessage) {
-        showNotification(resumeMessage, resume.status === 'failed' ? 'error' : 'info');
-      } else if (alreadyCorrectCount > 0) {
-        showNotification('Fields were already filled correctly', 'info');
-      } else if (hasCertFields) {
-        showNotification('Certificate fields skipped (no certificates in profile)', 'info');
-      } else if (skippedCount > 0) {
-        showNotification(`${skippedCount} field${skippedCount > 1 ? 's' : ''} skipped (no matching profile data)`, 'info');
-      } else {
-        showNotification('No matching fields found to fill on this page', 'info');
-      }
+      const status = `Filled ${filledCount}, Correct ${alreadyCorrectCount}, Skipped ${skippedCount}, Failed ${failedCount}`;
+      const detail = hasCertFields && skippedCount > 0 ? ' · Unmatched or existing answers were preserved.' : '';
+      // A missing optional resume must never hide the actual field-fill result.
+      showNotification(`${status}${detail}${resumeMessage ? ' · ' + resumeMessage : ''}`,
+        failedCount > 0 || resumeFailedCount > 0 ? 'error' : filledCount > 0 ? 'success' : 'info');
       if (window.location.href === pageUrl && (filledCount > 0 || alreadyCorrectCount > 0 || resumeAttachedCount > 0)) await logApplication();
 
     } catch (err) {

@@ -1,3 +1,4 @@
+import { isRadio, radioLabel, radioMembers, hasVisibleRadioLabel, captureRadioGroup, radioGroupUnchanged } from './radio';
 import { getAdapterFieldDegreePreference } from '../adapters';
 import { setNativeValue } from './dom';
 import { getFieldContext } from './fields';
@@ -8,6 +9,7 @@ export function canEdit(field: EditableField): boolean {
   if (field.disabled || ('readOnly' in field && field.readOnly)) return false;
   if (isInputField(field) && ['hidden', 'file', 'submit', 'button', 'image', 'reset', 'password'].includes(field.type)) return false;
   if (field.closest('[hidden], [aria-hidden="true"]')) return false;
+  if (isRadio(field) && hasVisibleRadioLabel(field)) return true;
   if (typeof field.getClientRects === 'function' && field.getClientRects().length === 0) return false;
   const style = field.ownerDocument.defaultView?.getComputedStyle?.(field);
   return !style || (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0');
@@ -16,6 +18,7 @@ export function canEdit(field: EditableField): boolean {
 export function captureTarget(element: EditableField) {
   return { element, value: element.value, checked: isInputField(element) ? element.checked : undefined,
     name: element.name, id: element.id, type: element.type, context: getFieldContext(element),
+    radioGroup: isRadio(element) ? captureRadioGroup(element) : undefined,
     url: element.ownerDocument.URL, degreePreference: getAdapterFieldDegreePreference(element) };
 }
 export type FieldTarget = ReturnType<typeof captureTarget>;
@@ -26,7 +29,8 @@ export function targetUnchanged(snapshot: FieldTarget): boolean {
     && field.name === snapshot.name && field.id === snapshot.id && field.type === snapshot.type
     && getFieldContext(field) === snapshot.context && field.value === snapshot.value
     && getAdapterFieldDegreePreference(field) === snapshot.degreePreference
-    && (!isInputField(field) || field.checked === snapshot.checked);
+    && (!isInputField(field) || field.checked === snapshot.checked)
+    && (!isRadio(field) || Boolean(snapshot.radioGroup && radioGroupUnchanged(field, snapshot.radioGroup)));
 }
 
 export function applyMapping(mapping: FieldMapping, targets: ReadonlyMap<number, FieldTarget>): AutofillCounts {
@@ -54,18 +58,21 @@ export function applyMapping(mapping: FieldMapping, targets: ReadonlyMap<number,
       field.dispatchEvent(new Event('input', { bubbles: true }));
       field.dispatchEvent(new Event('change', { bubbles: true }));
       if (field.value === match.value) counts.filledCount++; else counts.failedCount++;
-    } else if (isInputField(field) && ['checkbox', 'radio'].includes(field.type)) {
-      const normalized = target.toLowerCase();
-      const choice = field.value.toLowerCase();
-      const shouldCheck = field.type === 'checkbox' ? ['yes', 'true', '1'].includes(normalized)
-        : choice === normalized || (['yes', 'true', '1'].includes(normalized) && ['yes', 'true', '1'].includes(choice))
-          || (['no', 'false', '0'].includes(normalized) && ['no', 'false', '0'].includes(choice));
-      if (!shouldCheck) { counts.skippedCount++; continue; }
+    } else if (isRadio(field)) {
+      const group = radioMembers(field);
+      const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
+      // Visible option labels take precedence over opaque internal values.
+      let matches = group.filter(member => normalize(radioLabel(member)) === normalize(target));
+      if (!matches.length) matches = group.filter(member => normalize(member.value) === normalize(target));
+      if (matches.length !== 1 || !canEdit(matches[0]!)) { counts.skippedCount++; continue; }
+      const choice = matches[0]!;
+      if (choice.checked) { counts.alreadyCorrectCount++; continue; }
+      if (group.some(other => other.checked)) { counts.skippedCount++; continue; }
+      choice.click();
+      if (choice.checked) counts.filledCount++; else counts.failedCount++;
+    } else if (isInputField(field) && field.type === 'checkbox') {
+      if (!['yes', 'true', '1'].includes(target.toLowerCase())) { counts.skippedCount++; continue; }
       if (field.checked) { counts.alreadyCorrectCount++; continue; }
-      if (field.type === 'radio' && Array.from(field.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="radio"]'))
-        .some(other => other !== field && other.name === field.name && other.form === field.form && other.checked)) {
-        counts.skippedCount++; continue;
-      }
       // click performs activation and framework events; pre-setting checked toggles it back.
       field.click();
       if (field.checked) counts.filledCount++; else counts.failedCount++;

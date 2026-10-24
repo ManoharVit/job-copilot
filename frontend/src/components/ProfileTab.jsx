@@ -10,10 +10,13 @@ function ProfileTab() {
         linkedin_url: '', github_url: '', portfolio_url: '',
         current_title: '', years_experience: 0, education_level: '', graduation_year: 0, gpa: '',
         expected_ctc: '', current_ctc: '', notice_period: '',
+        current_fixed_ctc: '', current_variable_ctc: '',
+        expected_fixed_ctc: '', expected_variable_ctc: '',
         willing_to_relocate: false, work_authorized: false,
-        cover_letter_template: '', skills: []
+        cover_letter_template: '', skills: [], skill_experience: {}
     });
     const [skillInput, setSkillInput] = useState('');
+    const [experienceSkill, setExperienceSkill] = useState('');
 
     useEffect(() => {
         loadProfile();
@@ -28,8 +31,13 @@ function ProfileTab() {
                 try { skills = JSON.parse(skills); } catch { skills = []; }
             }
             
+            let skillExperience = data.skill_experience || {};
+            if (typeof skillExperience === 'string') {
+                try { skillExperience = JSON.parse(skillExperience); } catch { skillExperience = {}; }
+            }
             setProfile({
                 ...data,
+                skill_experience: skillExperience,
                 skills: Array.isArray(skills) ? skills : []
             });
         } catch (err) {
@@ -76,7 +84,9 @@ function ProfileTab() {
                     ...profile,
                     years_experience: parseInt(profile.years_experience) || 0,
                     graduation_year: parseInt(profile.graduation_year) || 0,
-                    skills: JSON.stringify(profile.skills)
+                    skills: JSON.stringify(profile.skills),
+                    skill_experience: Object.fromEntries(Object.entries(profile.skill_experience || {})
+                        .filter(([, years]) => years !== '').map(([skill, years]) => [skill, Number(years)]))
                 })
             });
             if (res.ok) showToast('✅ Profile saved!');
@@ -200,16 +210,58 @@ function ProfileTab() {
                 </div>
 
                 <div className="form-section">
+                    <h3>Experience by skill</h3>
+                    <p>Confirm years for each skill. Leave unknown durations blank.</p>
+                    <div className="form-grid">
+                        {Object.entries(profile.skill_experience || {}).map(([skill, years], index) => (
+                            <div className="form-group" key={skill}>
+                                <label htmlFor={`p_skill_years_${index}`}>{skill} (years)</label>
+                                <input id={`p_skill_years_${index}`} type="number" min="0" max="100" step="0.5"
+                                    value={years} onChange={event => setProfile(previous => ({
+                                        ...previous, skill_experience: { ...previous.skill_experience, [skill]: event.target.value }
+                                    }))} />
+                            </div>
+                        ))}
+                        <div className="form-group">
+                            <label htmlFor="p_experience_skill">Add a skill</label>
+                            <input id="p_experience_skill" value={experienceSkill}
+                                onChange={event => setExperienceSkill(event.target.value)} />
+                            <button type="button" disabled={!experienceSkill.trim()}
+                                onClick={() => {
+                                    const skill = experienceSkill.trim();
+                                    setProfile(previous => ({ ...previous, skill_experience: {
+                                        [skill]: '', ...previous.skill_experience
+                                    } }));
+                                    setExperienceSkill('');
+                                }}>Add skill duration</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="form-section">
                     <h3>Screening Details</h3>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label>Expected CTC</label>
+                            <label>Expected total annual CTC</label>
                             <input type="text" name="expected_ctc" value={profile.expected_ctc || ''} onChange={handleChange} />
                         </div>
                         <div className="form-group">
-                            <label>Current CTC</label>
+                            <label>Current total annual CTC</label>
                             <input type="text" name="current_ctc" value={profile.current_ctc || ''} onChange={handleChange} />
                         </div>
+                        {[
+                            ['current_fixed_ctc', 'Current fixed annual pay'],
+                            ['current_variable_ctc', 'Current variable annual pay'],
+                            ['expected_fixed_ctc', 'Expected fixed annual pay'],
+                            ['expected_variable_ctc', 'Expected variable annual pay'],
+                        ].map(([name, label]) => (
+                            <div className="form-group" key={name}>
+                                <label htmlFor={`p_${name}`}>{label}</label>
+                                <input id={`p_${name}`} type="text" name={name}
+                                    placeholder="Include units, e.g. 8 LPA"
+                                    value={profile[name] || ''} onChange={handleChange} />
+                            </div>
+                        ))}
                         <div className="form-group">
                             <label>Notice Period</label>
                             <input type="text" name="notice_period" value={profile.notice_period || ''} onChange={handleChange} />

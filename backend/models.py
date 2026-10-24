@@ -68,11 +68,16 @@ class Profile(Base):
     gpa = Column(String, default="")
     education_records = Column(Text, default="[]") # JSON list of degree dicts
     
+    skill_experience = Column(Text, default="{}") # Confirmed years by skill
     skills = Column(Text, default="[]") # JSON list
     certifications = Column(Text, default="[]") # JSON list of dicts
     
     expected_ctc = Column(String, default="")
     current_ctc = Column(String, default="")
+    current_fixed_ctc = Column(String, default="")
+    current_variable_ctc = Column(String, default="")
+    expected_fixed_ctc = Column(String, default="")
+    expected_variable_ctc = Column(String, default="")
     notice_period = Column(String, default="")
     
     willing_to_relocate = Column(Boolean, default=True)

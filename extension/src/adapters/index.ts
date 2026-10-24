@@ -1,3 +1,4 @@
+import { isRadio, radioOptions } from '../core/radio';
 import { genericAdapter, detectGenericPlatform } from './generic';
 import { greenhouseAdapter } from './greenhouse';
 import { leverAdapter } from './lever';
@@ -58,6 +59,7 @@ export function getAdapterFieldContext(field: EditableField): string | null {
 }
 
 export function getFieldOptions(url: URL, field: EditableField): string[] {
+  if (isRadio(field)) return radioOptions(field);
   if (isSelectField(field)) return Array.from(field.options, option => option.text || option.textContent || '').filter(Boolean);
   return resolveAdapter(url, field.ownerDocument).getFieldOptions?.(field) ?? [];
 }

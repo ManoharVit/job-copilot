@@ -1,6 +1,10 @@
 import json
 import re
 
+from skill_experience import confirmed_skill_years
+
+from compensation import compensation_field, compensation_request
+
 def match_fields(fields: list[dict], profile: dict) -> dict:
     """
     fields: list of {index, label, name, placeholder, type, tag, options}
@@ -125,6 +129,15 @@ def _get_best_match(text, field_type, tag, options, profile, degree_pref=None):
     # Jurisdiction, eligibility and consent are candidate decisions, never guesses.
     if requires_manual_review(text):
         return None
+    # Resolve components before general matching: total CTC is not fixed pay.
+    if compensation_request(text) is not None:
+        return compensation_field(text, field_type, options, profile, _format_salary)
+    if re.search(r"\b(?:experience|proficiency)\b", text):
+        specific, years = confirmed_skill_years(text, profile)
+        if specific:
+            if years is None:
+                return None
+            return _pick_experience_range(options, years) if options else str(years)
     # --- Certifications ---
     certs_raw = profile.get("certifications", "[]")
     if isinstance(certs_raw, str):
@@ -329,65 +342,16 @@ def _get_best_match(text, field_type, tag, options, profile, degree_pref=None):
             return None
         return str(exp)
     elif any(k in text for k in ["experience", "years", "how many", "how long", "proficiency"]):
-        if options:
-            return _pick_experience_range(options, profile.get("years_experience", 2))
-        return str(profile.get("years_experience", 2))
-    
-    # --- Salary & Compensation ---
-    elif (
-        any(k in text for k in [
-            "expected ctc", "expected salary", "expected package", "desired salary",
-            "expected compensation", "desired compensation", "expected fixed compensation",
-            "expected annual fixed compensation", "desired ctc", "target salary",
-            "target compensation", "target ctc", "expected remuneration", "expected annual"
-        ]) or (
-            any(k in text for k in ["expected", "desired", "target"]) and
-            (any(k in text for k in ["ctc", "salary", "package", "compensation", "remuneration", "fixed compensation", "annual fixed", "rs lpa", "(rs lpa)", "lpa"]) or bool(re.search(r'\b(ctc|salary|package|compensation|remuneration|lpa)\b', text)))
-        )
-    ):
-        val = profile.get("expected_ctc", "")
-        if options:
-            num_val = _format_salary(val, "number", text)
-            for opt in options:
-                if val and val.strip().lower() == opt.strip().lower():
-                    return opt
-                numeric_option = re.fullmatch(r"\s*([0-9]+(?:\.[0-9]+)?)\s*(?:lpa|lakhs?|lacs?)?\s*", opt, re.I)
-                if re.fullmatch(r"\d+(?:\.\d+)?", num_val or "") and numeric_option and float(num_val) == float(numeric_option.group(1)):
-                    return opt
+        # Total tenure does not establish years in a specific skill or employer.
+        if re.search(r"\bproficiency\b|\bexperience\b.*\b(?:in|with|using|on|at)\b", text):
             return None
-        return _format_salary(val, field_type, text)
-    elif (
-        (
-            any(k in text for k in ["current", "present", "existing"]) and
-            not any(k in text for k in ["expected", "desired", "target"]) and
-            (any(k in text for k in ["ctc", "salary", "package", "compensation", "remuneration", "fixed compensation", "annual fixed", "rs lpa", "(rs lpa)", "lpa"]) or bool(re.search(r'\b(ctc|salary|package|compensation|remuneration|lpa)\b', text)))
-        ) or any(k in text for k in [
-            "current ctc", "current salary", "current package", "present ctc",
-            "present salary", "mention your current ctc", "current compensation",
-            "present compensation", "current fixed compensation",
-            "current annual fixed compensation", "current annual", "current remuneration",
-            "present remuneration"
-        ]) or (
-            not any(k in text for k in ["expected", "desired", "target"]) and (
-                any(k in text for k in ["annual fixed compensation", "fixed compensation", "rs lpa", "(rs lpa)"]) or
-                ("annual fixed" in text and any(k in text for k in ["compensation", "ctc", "salary"])) or
-                bool(re.search(r'\bctc\b', text)) or
-                bool(re.search(r'\bsalary\b', text)) or
-                (bool(re.search(r'\bcompensation\b', text)) and not any(k in text for k in ["worker", "workman", "equity", "stock", "benefit", "unemployment", "board", "committee"]))
-            )
-        )
-    ):
-        val = profile.get("current_ctc", "")
-        if options:
-            num_val = _format_salary(val, "number", text)
-            for opt in options:
-                if val and val.strip().lower() == opt.strip().lower():
-                    return opt
-                numeric_option = re.fullmatch(r"\s*([0-9]+(?:\.[0-9]+)?)\s*(?:lpa|lakhs?|lacs?)?\s*", opt, re.I)
-                if re.fullmatch(r"\d+(?:\.\d+)?", num_val or "") and numeric_option and float(num_val) == float(numeric_option.group(1)):
-                    return opt
+        years = profile.get("years_experience")
+        if isinstance(years, bool) or not isinstance(years, (int, float)) or years < 0:
             return None
-        return _format_salary(val, field_type, text)
+        if options:
+            return _pick_experience_range(options, years)
+        return str(years)
+
     elif any(k in text for k in ["notice", "joining", "start date", "notice period", "when can you join"]):
         if options:
             notice = re.sub(r"[^a-z0-9]", "", profile.get("notice_period", "").lower())
@@ -572,6 +536,10 @@ def _handle_yes(options, default_val):
 
 def _pick_experience_range(options, years):
     """Pick the best matching experience range from dropdown options."""
+    if years == 0:
+        for opt in options:
+            if opt.strip().lower() in {"not much", "none", "no experience", "0 years", "fresher"}:
+                return opt
     # Try exact match first
     for opt in options:
         # Match patterns like "1-2", "2-3", etc.

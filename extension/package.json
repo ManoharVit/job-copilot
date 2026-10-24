@@ -14,7 +14,8 @@
     "build:unpacked": "npm run build && node scripts/sync-unpacked.mjs",
     "test:build": "node --import tsx --test tests/test_build.js",
     "test": "node --import tsx tests/test_dom_extraction.js && node --import tsx --test tests/test_frame_lifecycle.js tests/test_dom_values.js tests/test_adapters.js tests/test_api_proxy.js tests/test_autofill.js tests/test_ats_adapters.js tests/test_ats_lifecycle.js tests/test_site_access.js tests/test_backend_connection.js tests/test_resume_upload.js",
-    "test:resume-browser": "node tests/test_resume_browser.cjs"
+    "test:resume-browser": "node tests/test_resume_browser.cjs",
+    "test:radio-browser": "node tests/test_radio_browser.cjs"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.0",

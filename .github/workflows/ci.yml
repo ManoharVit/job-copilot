@@ -82,6 +82,9 @@ jobs:
       - name: Run extension regression tests
         run: npm test
 
+      - name: Test radio questionnaire in real Chromium
+        run: npm run test:radio-browser
+
       - name: Build production extension
         run: npm run build
 
